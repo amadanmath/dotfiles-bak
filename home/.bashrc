@@ -7,9 +7,10 @@ pathadd() {
         PATH="${PATH:+"$PATH:"}$1"
     fi
 }
-pathadd "~/bin"
-pathadd "~/local/bin"
-pathadd "~/.rvm/bin"
+pathadd "$HOME/bin"
+pathadd "$HOME/local/bin"
+pathadd "$HOME/.rvm/bin"
+pathadd "$HOME/.bin"
 
 if [ -f ~/.lastcwd ]; then
   export OLDPWD=`cat ~/.lastcwd`
