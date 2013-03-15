@@ -1,0 +1,13 @@
+export EDITOR=vim
+
+alias sayjp="say -v kyoko"
+alias saych="say -v ting-ting"
+
+alias chrome="open -a 'Google Chrome'"
+
+[[ -s "~/.rvm/scripts/rvm" ]] && source "~/.rvm/scripts/rvm"
+if [ -f `brew --prefix`/etc/bash_completion ]; then
+  . `brew --prefix`/etc/bash_completion
+fi
+
+

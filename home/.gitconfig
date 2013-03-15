@@ -1,0 +1,46 @@
+[user]
+	name = Goran Topic
+	email = amadan@mad.scientist.com
+
+[github]
+  user = amadanmath
+  email = amadan@mad.scientist.com
+
+[core]
+  pager = less -FRSX
+  editor = vim
+  excludesfile = ~/.gitignore_global
+  whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
+
+[i18n]
+  commitEncoding = UTF-8
+  logOutputEncoding = UTF-8
+
+[color]
+  diff = auto
+  status = auto
+  branch = auto
+  interactive = auto
+
+[mergetool "mfugitive"]
+  cmd = mvim -f -c \"Gdifff\" \"$MERGED\"
+
+[merge]
+  tool = mfugitive
+  ff = false
+
+[alias]
+  st = status
+  ci = commit
+  cia = commit -a
+  co = checkout
+  br = branch
+  w = whatchanged
+  mg = merge --no-ff
+  pop = stash pop
+  lol = log --graph --decorate --pretty=oneline --abbrev-commit
+  lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
+  ff = flow feature
+  fr = flow release
+  fh = flow hotfix
+  fs = flow support

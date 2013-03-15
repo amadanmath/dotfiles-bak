@@ -1,0 +1,5 @@
+--ignore-dir=data
+--ignore-dir=jsc
+--type-add=html=.haml
+--type-add=css=.sass,.scss
+--type-set=coffee=.coffee

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+HOST=$1
+if [ -z "$HOST" ]; then
+  echo Error: hostname not specified >&2
+  exit 1
+fi
+mkdir -p /Volumes/$HOST
+sshfs $HOST:/ -ofollow_symlinks /Volumes/$HOST
+ssh $HOST
+umount /Volumes/$HOST
