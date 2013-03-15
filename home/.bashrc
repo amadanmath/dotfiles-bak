@@ -12,20 +12,23 @@ pathadd "$HOME/local/bin"
 pathadd "$HOME/.rvm/bin"
 pathadd "$HOME/.bin"
 
-if [ -f ~/.lastcwd ]; then
+if [ -s ~/.lastcwd ]; then
   export OLDPWD=`cat ~/.lastcwd`
   rm ~/.lastcwd
 fi
 
-if [ -f ~/.bash/aliases ]; then
+if [ -s ~/.bash/aliases ]; then
   source ~/.bash/aliases
 fi
 
-if [ -f ~/.bash/prompt ]; then
+if [ -s ~/.bash/prompt ]; then
   source ~/.bash/prompt
 fi
 
-if [ -f ~/.bash/os.`uname` ]; then
+if [ -s ~/.bash/os.`uname` ]; then
   source ~/.bash/os.`uname`
 fi
 
+if [ -s "$HOME/.rvm/scripts/rvm" ]; then
+  source "$HOME/.rvm/scripts/rvm"
+fi
