@@ -339,6 +339,10 @@
     Bundle "tpope/vim-rails"
       " :Rscript...
   " "}}}
+  
+  " Go-Lang "{{{
+    Bundle "jnwhiteh/vim-golang"
+  " "}}}
 
   " JavaScript "{{{
     Bundle "vim-scripts/jQuery"
