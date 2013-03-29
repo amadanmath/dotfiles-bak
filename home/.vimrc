@@ -92,7 +92,7 @@
   autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
 
   " tidy up XML XXX put it into ftplugins
-  autocmd FileType xml nnoremap <buffer> <leader>x :%!tidy -q -i -utf8 -xml<CR>
+  autocmd FileType xml,xhtml nnoremap <buffer> <leader>x :%!tidy -q -i -utf8 -xml<CR>
 
   " keep a cursor line in the current window only
   set cursorline
