@@ -72,6 +72,18 @@
   if has("gui_running")
     set guioptions-=T
   endif
+
+  function! NeatFoldText()
+    let line = ' ' . substitute(getline(v:foldstart), '^\s*"\?\s*\|\s*"\?\s*{{' . '{\d*\s*', '', 'g') . ' '
+    let lines_count = v:foldend - v:foldstart + 1
+    let lines_count_text = '| ' . printf("%10s", lines_count . ' lines') . ' |'
+    let foldchar = split(filter(split(&fillchars, ','), 'v:val =~# "fold"')[0], ':')[-1]
+    let foldtextstart = strpart('+' . repeat(foldchar, v:foldlevel*2) . line, 0, (winwidth(0)*2)/3)
+    let foldtextend = lines_count_text . repeat(foldchar, 8)
+    let length = strlen(substitute(foldtextstart . foldtextend, '.', 'x', 'g'))
+    return foldtextstart . repeat(foldchar, winwidth(0)-length) . foldtextend
+  endfunction
+  set foldtext=NeatFoldText()
 " "}}}
 
 " Grep "{{{
