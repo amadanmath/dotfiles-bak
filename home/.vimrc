@@ -98,6 +98,10 @@
   set cursorline
   autocmd WinEnter * setlocal cursorline
   autocmd WinLeave * setlocal nocursorline
+
+  " automatically open the quicklist on make
+  autocmd QuickFixCmdPost [^l]* nested cwindow
+  " autocmd QuickFixCmdPost    l* nested lwindow
 " "}}}
 
 " Key mappings "{{{
@@ -385,6 +389,10 @@
       " :Ack [opts] pattern [dir]
     Bundle "Shebang"
       nnoremap <leader>X :w<CR>:call SetExecutable()<CR>
+  " "}}}
+  
+  " Various "{{{
+    Bundle "amadanmath/amadan.vim"
   " "}}}
 
   " OS X "{{{

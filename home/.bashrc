@@ -1,5 +1,6 @@
 export CLICOLOR=1
 export LANG=en_US.UTF-8
+export GOPATH="$HOME/prog/go"
 
 # http://superuser.com/a/39995/39723
 pathadd() {
@@ -7,10 +8,9 @@ pathadd() {
         PATH="${PATH:+"$PATH:"}$1"
     fi
 }
-pathadd "$HOME/bin"
-pathadd "$HOME/local/bin"
 pathadd "$HOME/.rvm/bin"
 pathadd "$HOME/.bin"
+pathadd "$GOPATH/bin"
 
 if [ -s ~/.lastcwd ]; then
   export OLDPWD=`cat ~/.lastcwd`
