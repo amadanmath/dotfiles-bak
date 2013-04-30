@@ -293,6 +293,7 @@
   
   " Editing "{{{
     Bundle "tpope/vim-repeat"
+    Bundle "tpope/vim-abolish"
     Bundle "tpope/vim-unimpaired"
       " [, ] with many many actions
     Bundle "edsono/vim-matchit"
