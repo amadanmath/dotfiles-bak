@@ -10,3 +10,8 @@ alias rst="touch tmp/restart.txt"
 
 # tmux
 alias ltmux="if tmux has; then tmux attach -d; else tmux new; fi"
+
+# wxPython
+wx() {
+  python -m wx.py.Py$1
+}
