@@ -319,6 +319,12 @@
       " shows search index/position (also, g/)
     Bundle "vim-scripts/file-line"
       " opening file:line:column works
+    Bundle "mbbill/undotree"
+      nnoremap <F6> :UndotreeToggle<CR>
+      if has("persistent_undo")
+        set undodir="~/.vim/undo"
+        set undofile
+      endif
   " "}}}
   
   " Completion "{{{

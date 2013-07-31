@@ -2,6 +2,8 @@ export EDITOR=vim
 
 alias sayjp="say -v kyoko"
 alias saych="say -v ting-ting"
+alias vim="mvim -v"
+alias rim="mvim --remote-silent"
 
 alias chrome="open -a 'Google Chrome'"
 
