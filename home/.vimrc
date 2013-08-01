@@ -380,6 +380,10 @@
       " :h dbext-tutorial
   " "}}}
 
+  " LilyPond "{{{
+    Bundle "qrps/lilypond-vim"
+  " "}}}
+
   " Tools "{{{
     Bundle "vim-scripts/Conque-Shell"
       " :ConqueTerm
