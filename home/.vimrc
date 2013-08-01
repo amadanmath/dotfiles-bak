@@ -72,6 +72,18 @@
   if has("gui_running")
     set guioptions-=T
   endif
+
+  function! NeatFoldText()
+    let line = ' ' . substitute(getline(v:foldstart), '^\s*"\?\s*\|\s*"\?\s*{{' . '{\d*\s*', '', 'g') . ' '
+    let lines_count = v:foldend - v:foldstart + 1
+    let lines_count_text = '| ' . printf("%10s", lines_count . ' lines') . ' |'
+    let foldchar = split(filter(split(&fillchars, ','), 'v:val =~# "fold"')[0], ':')[-1]
+    let foldtextstart = strpart('+' . repeat(foldchar, v:foldlevel*2) . line, 0, (winwidth(0)*2)/3)
+    let foldtextend = lines_count_text . repeat(foldchar, 8)
+    let length = strlen(substitute(foldtextstart . foldtextend, '.', 'x', 'g'))
+    return foldtextstart . repeat(foldchar, winwidth(0)-length) . foldtextend
+  endfunction
+  set foldtext=NeatFoldText()
 " "}}}
 
 " Grep "{{{
@@ -281,6 +293,7 @@
   
   " Editing "{{{
     Bundle "tpope/vim-repeat"
+    Bundle "tpope/vim-abolish"
     Bundle "tpope/vim-unimpaired"
       " [, ] with many many actions
     Bundle "edsono/vim-matchit"
@@ -306,12 +319,18 @@
       " shows search index/position (also, g/)
     Bundle "vim-scripts/file-line"
       " opening file:line:column works
+    Bundle "mbbill/undotree"
+      nnoremap <F6> :UndotreeToggle<CR>
+      if has("persistent_undo")
+        set undodir="~/.vim/undo"
+        set undofile
+      endif
   " "}}}
   
   " Completion "{{{
-    Bundle "Valloric/YouCompleteMe"
+    " Bundle "Valloric/YouCompleteMe"
       " automatic completions
-      let g:ycm_key_invoke_completion = '<C-N>'
+      " let g:ycm_key_invoke_completion = '<C-N>'
     " Bundle "gmarik/snipmate.vim"
   " "}}}
   
@@ -393,6 +412,7 @@
       " :Ack [opts] pattern [dir]
     Bundle "Shebang"
       nnoremap <leader>X :w<CR>:call SetExecutable()<CR>
+    Bundle "chrisbra/Recover.vim"
   " "}}}
   
   " Various "{{{

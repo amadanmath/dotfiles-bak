@@ -30,7 +30,7 @@
   ff = false
 
 [alias]
-  st = status
+  st = status -sb
   ci = commit
   cia = commit -a
   co = checkout
@@ -44,3 +44,7 @@
   fr = flow release
   fh = flow hotfix
   fs = flow support
+  purr = pull --rebase
+  ready = rebase -i @{u}
+  ignored = ls-files –others -i –exclude-standard
+  patch = add --patch

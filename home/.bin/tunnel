@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# This is complicated by the fact that ssh doesn't leave a PID when
+# daemonised >.<
+
+HOST=$1
+
+# do we have a tunnel there already?
+if [ -n "$HOST" ]
+then
+  PORT=`ps -eo pid,command | awk '$2=="ssh" && $3=="-fNL" && match($4, /:'$HOST':/) {split($4,a,/:/); print a[1]}'`
+fi
+
+# if we have 3 arguments and no tunnel, make the tunnel
+if [ -n "$3" -a -z "$PORT" ]
+then
+  TUNNEL=$2
+  PORT=$3
+
+  # make the tunnel
+  ssh -fNL $PORT:$HOST:22 -oCheckHostIP=no -oStrictHostKeyChecking=no -oNumberOfPasswordPrompts=1 $TUNNEL
+  PID=`ps -eo pid,command | awk '!/awk/ && /ssh -fNL'" $PORT"':/{print $1}'`
+  sleep 1
+
+  # mount the tunnel volume
+  mkdir -p /Volumes/$HOST
+  sshfs localhost: -p $PORT -ovolname=$HOST -oCheckHostIP=no -oStrictHostKeyChecking=no -oNumberOfPasswordPrompts=1 -ofollow_symlinks /Volumes/$HOST
+
+  # enter the tunnel
+  #  ssh-keygen -R [localhost]:9022
+  ssh -oCheckHostIP=no -oStrictHostKeyChecking=no -oNumberOfPasswordPrompts=1 -p $PORT localhost
+
+  # when done, unmount the tunnel volume
+  umount /Volumes/$HOST
+  sleep 1
+
+  # and collapse the tunnel
+  kill $PID
+
+# otherwise go through the tunnel
+else
+  # if no arguments, detect a tunnel
+  if [ -z "$HOST" ]
+  then
+    HOST=`ps -eo pid,command | awk '$2=="ssh" && $3=="-fNL" {split($4,a,/:/); print a[2]}' | head -1`
+  fi
+
+  if [ -z "$PORT" ]
+  then
+    PORT=`ps -eo pid,command | awk '$2=="ssh" && $3=="-fNL" && match($4, /:'$HOST':/) {split($4,a,/:/); print a[1]}'`
+  fi
+
+  # tunnel found
+  if [ -n "$HOST" -a -n "$PORT" ]
+  then
+    ssh -oCheckHostIP=no -oStrictHostKeyChecking=no -oNumberOfPasswordPrompts=1 -p $PORT localhost
+
+  # tunnel not found
+  else
+    echo "Error: create a tunnel first: tunnel <host> <tunnel> <port>" 1>&2
+  fi
+fi

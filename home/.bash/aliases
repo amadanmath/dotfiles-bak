@@ -1,8 +1,17 @@
+alias reload="source ~/.bash_profile"
+
 # Bunder - http://ryan.mcgeary.org/2011/02/09/vendor-everything-still-applies/
 alias be="bundle exec"
 alias bi='bundle install --path vendor && (grep -q "vendor/ruby" .gitignore 2>/dev/null || echo "vendor/ruby" >> .gitignore)'
 
-alias reload="source ~/.bash_profile"
 
 # Ruby webdev
 alias rst="touch tmp/restart.txt"
+
+# tmux
+alias ltmux="if tmux has; then tmux attach -d; else tmux new; fi"
+
+# wxPython
+wx() {
+  python -m wx.py.Py$1
+}
