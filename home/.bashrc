@@ -10,6 +10,7 @@ pathadd() {
 }
 pathadd "$HOME/.rvm/bin"
 pathadd "$HOME/.bin"
+pathadd "$HOME/local/bin"
 pathadd "$GOPATH/bin"
 
 if [ -s ~/.lastcwd ]; then

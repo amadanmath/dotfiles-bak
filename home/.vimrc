@@ -319,12 +319,18 @@
       " shows search index/position (also, g/)
     Bundle "vim-scripts/file-line"
       " opening file:line:column works
+    Bundle "mbbill/undotree"
+      nnoremap <F6> :UndotreeToggle<CR>
+      if has("persistent_undo")
+        set undodir="~/.vim/undo"
+        set undofile
+      endif
   " "}}}
   
   " Completion "{{{
-    Bundle "Valloric/YouCompleteMe"
+    " Bundle "Valloric/YouCompleteMe"
       " automatic completions
-      let g:ycm_key_invoke_completion = '<C-N>'
+      " let g:ycm_key_invoke_completion = '<C-N>'
     " Bundle "gmarik/snipmate.vim"
   " "}}}
   
@@ -393,6 +399,10 @@
       " :h dbext-tutorial
   " "}}}
 
+  " LilyPond "{{{
+    Bundle "qrps/lilypond-vim"
+  " "}}}
+
   " Tools "{{{
     Bundle "vim-scripts/Conque-Shell"
       " :ConqueTerm
@@ -402,6 +412,7 @@
       " :Ack [opts] pattern [dir]
     Bundle "Shebang"
       nnoremap <leader>X :w<CR>:call SetExecutable()<CR>
+    Bundle "chrisbra/Recover.vim"
   " "}}}
   
   " Various "{{{
