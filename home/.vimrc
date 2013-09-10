@@ -4,7 +4,7 @@
   set autowrite
   set autoread
   set clipboard+=unnamed
-  set pastetoggle=<f5>
+  set pastetoggle=<F5>
   set tags=./tags;$HOME
   set encoding=utf-8
   set virtualedit=block
@@ -215,68 +215,222 @@
     " set noantialias
     nnoremap <silent> <SwipeLeft> :macaction _cycleWindowsBackwards:<CR>
     nnoremap <silent> <SwipeRight> :macaction _cycleWindows:<CR>
-    au FocusLost * :set transp=40
-    au FocusGained * :set transp=10
-    set transp=10
+  endif
+" "}}}
+
+" Local vimrc "{{{
+  if filereadable(expand('~/.vimrc.local'))
+    source ~/.vimrc.local
   endif
 " "}}}
 
 " Plugins "{{{
   " Vundle "{{{
     filetype off
-    set runtimepath+=~/.vim/bundle/vundle/
-    call vundle#rc()
-    Bundle "gmarik/vundle"
+    if has('vim_starting')
+      set runtimepath+=~/.vim/bundle/neobundle.vim/
+    endif
+    call neobundle#rc(expand('~/.vim/bundle/'))
+    NeoBundleFetch "Shougo/neobundle.vim"
+  " "}}}
+
+  " Asynchronous processing "{{{
+    " XXX NeoBundle "Shougo/vimproc"
+    " XXX NeoBundle "tpope/vim-dispatch"
   " "}}}
 
   " Appearance "{{{
-    Bundle "nanotech/jellybeans.vim"
+    NeoBundle "nanotech/jellybeans.vim"
       colorscheme jellybeans
       let g:jellybeans_overrides = {
         \    'Todo': { 'guifg': '900000', 'guibg': 'f0f000',
         \              'ctermfg': 'Red', 'ctermbg': 'Yellow',
         \              'attr': 'bold' },
         \}
-    Bundle "dickeyxxx/status.vim"
+    NeoBundle "itchyny/lightline.vim" "{{{
       " adds a helpful status line (depends on syntastic)
-    Bundle "molok/vim-smartusline"
-      " colors the status line
-    Bundle "amadanmath/numbers.vim"
+      if exists('g:powerline_font') && exists('+guifont')
+        let &guifont=g:powerline_font
+        let g:powerline_chars = {
+          \ 'branch[':"\ue0a0 ",
+          \ 'branch]':"",
+          \ 'ln':"\ue0a1",
+          \ 'lock':"\ue0a2",
+          \ '>black':"\ue0b0",
+          \ '>':"\ue0b1",
+          \ '<black':"\ue0b2",
+          \ '<':"\ue0b3",
+          \ }
+      else
+        let g:powerline_chars = {
+          \ 'branch[':"[",
+          \ 'branch]':"]",
+          \ 'ln':"",
+          \ 'lock':"\u00ae",
+          \ '>black':"",
+          \ '>':">",
+          \ '<black':"",
+          \ '<':"<",
+          \ }
+      endif
+
+      let g:lightline = {
+            \ 'colorscheme': 'wombat',
+            \ 'active': {
+            \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ], ['ctrlpmark'] ],
+            \   'right': [[ 'lineinfo', 'syntastic' ], ['percent'], [ 'fileformat', 'fileencoding', 'filetype']]
+            \ },
+            \ 'component_function': {
+            \   'fugitive': 'MyFugitive',
+            \   'filename': 'MyFilename',
+            \   'fileformat': 'MyFileformat',
+            \   'filetype': 'MyFiletype',
+            \   'fileencoding': 'MyFileencoding',
+            \   'mode': 'MyMode',
+            \   'syntastic': 'SyntasticStatuslineFlag',
+            \   'ctrlpmark': 'CtrlPMark',
+            \ },
+            \ 'separator': { 'left': g:powerline_chars['>black'], 'right': g:powerline_chars['<black'] },
+            \ 'subseparator': { 'left': g:powerline_chars['>'], 'right': g:powerline_chars['<'] }
+            \ }
+      
+      function! MyModified()
+        return &ft =~ 'help' ? '' : &modified ? '+' : &modifiable ? '' : '-'
+      endfunction
+      
+      function! MyReadonly()
+        return &ft !~? 'help' && &readonly ? g:powerline_chars['lock'] : ''
+      endfunction
+      
+      function! MyFilename()
+        let fname = expand('%:t')
+        return fname == 'ControlP' ? g:lightline.ctrlp_item :
+              \ fname == '__Tagbar__' ? g:lightline.fname :
+              \ fname =~ '__Gundo\|NERD_tree\|\[BufExplorer\]' ? '' :
+              \ &ft == 'vimfiler' ? vimfiler#get_status_string() :
+              \ &ft == 'unite' ? unite#get_status_string() :
+              \ &ft == 'vimshell' ? vimshell#get_status_string() :
+              \ &ft == 'undotree' ? '' :
+              \ ('' != MyReadonly() ? MyReadonly() . ' ' : '') .
+              \ ('' != fname ? fname : '[No Name]') .
+              \ ('' != MyModified() ? ' ' . MyModified() : '')
+      endfunction
+      
+      function! MyFugitive()
+        try
+          if expand('%:t') !~? 'Tagbar\|Gundo\|NERD\|undotree' && &ft !~? 'vimfiler' && exists('*fugitive#head')
+            let mark = ''  " edit here for cool mark
+            let _ = fugitive#head()
+            return strlen(_) ? g:powerline_chars['branch['].fugitive#head().g:powerline_chars['branch]'] : ''
+          endif
+        catch
+        endtry
+        return ''
+      endfunction
+      
+      function! MyFileformat()
+        return winwidth('.') > 70 ? &fileformat : ''
+      endfunction
+      
+      function! MyFiletype()
+        return winwidth('.') > 70 ? (strlen(&filetype) ? &filetype : 'no ft') : ''
+      endfunction
+      
+      function! MyFileencoding()
+        return winwidth('.') > 70 ? (strlen(&fenc) ? &fenc : &enc) : ''
+      endfunction
+      
+      function! MyMode()
+        let fname = expand('%:t')
+        return fname == '__Tagbar__' ? 'Tagbar' :
+              \ fname == 'ControlP' ? 'CtrlP' :
+              \ fname == '__Gundo__' ? 'Gundo' :
+              \ fname == '__Gundo_Preview__' ? 'Gundo Preview' :
+              \ fname =~ 'NERD_tree' ? 'NERDTree' :
+              \ fname == '[BufExplorer]' ? 'BufExplorer' :
+              \ &ft == 'unite' ? 'Unite' :
+              \ &ft == 'undotree' ? 'UndoTree' :
+              \ &ft == 'vimfiler' ? 'VimFiler' :
+              \ &ft == 'vimshell' ? 'VimShell' :
+              \ winwidth('.') > 60 ? lightline#mode() : ''
+      endfunction
+      
+      function! CtrlPMark()
+        if expand('%:t') =~ 'ControlP'
+          call lightline#link('iR'[g:lightline.ctrlp_regex])
+          return lightline#concatenate([g:lightline.ctrlp_prev, g:lightline.ctrlp_item
+                \ , g:lightline.ctrlp_next], 0)
+        else
+          return ''
+        endif
+      endfunction
+      
+      let g:ctrlp_status_func = {
+        \ 'main': 'CtrlPStatusFunc_1',
+        \ 'prog': 'CtrlPStatusFunc_2',
+        \ }
+      
+      function! CtrlPStatusFunc_1(focus, byfname, regex, prev, item, next, marked)
+        let g:lightline.ctrlp_regex = a:regex
+        let g:lightline.ctrlp_prev = a:prev
+        let g:lightline.ctrlp_item = a:item
+        let g:lightline.ctrlp_next = a:next
+        return lightline#statusline(0)
+      endfunction
+      
+      function! CtrlPStatusFunc_2(str)
+        return lightline#statusline(0)
+      endfunction
+      
+      let g:tagbar_status_func = 'TagbarStatusFunc'
+      
+      function! TagbarStatusFunc(current, sort, fname, ...) abort
+          let g:lightline.fname = a:fname
+        return lightline#statusline(0)
+      endfunction
+      
+      let g:unite_force_overwrite_statusline = 0
+      let g:vimfiler_force_overwrite_statusline = 0
+      let g:vimshell_force_overwrite_statusline = 0
+    "}}}
+    NeoBundle "amadanmath/numbers.vim"
       " gives relative numbers in normal mode
   " "}}}
 
   " Buffer Navigation "{{{
-    Bundle "scrooloose/nerdtree"
+    NeoBundle "scrooloose/nerdtree"
       let NERDChristmasTree = 1
       let NERDTreeQuitOnOpen = 1
       nnoremap <silent> <F2> :NERDTreeToggle<CR>
       nnoremap <silent> <S-F2> :execute "NERDTree ".expand("%:p:h")<CR>
 
-    Bundle "amadanmath/bufexplorer.zip"
+    NeoBundle "amadanmath/bufexplorer.zip"
       nnoremap <unique> <F3> :BufExplorerToggle<CR>
 
-    Bundle "majutsushi/tagbar"
+    NeoBundle "majutsushi/tagbar"
       nnoremap <script> <silent> <unique> <F4> :TagbarToggle<CR>
       let g:tagbar_autoclose = 1
       let g:tagbar_autofocus = 1
       let g:tagbar_sort = 0
+
+      " gem install CoffeeTags
       if executable('coffeetags')
         let g:tagbar_type_coffee = {
-          \   'ctagsbin' : 'coffeetags',
-          \   'ctagsargs' : '--include-vars',
-          \   'kinds' : [
-          \     'f:functions',
-          \     'o:object',
-          \   ],
-          \   'sro' : ".",
-          \   'kind2scope' : {
-          \     'f' : 'object',
-          \     'o' : 'object',
-          \   }
-          \ }
+              \ 'ctagsbin' : 'coffeetags',
+              \ 'ctagsargs' : '',
+              \ 'kinds' : [
+              \ 'f:functions',
+              \ 'o:object',
+              \ ],
+              \ 'sro' : ".",
+              \ 'kind2scope' : {
+              \ 'f' : 'object',
+              \ 'o' : 'object',
+              \ }
+              \ }
       endif
 
-    Bundle "kien/ctrlp.vim"
+    NeoBundle "kien/ctrlp.vim"
       let g:ctrlp_map = '<leader>^'
       " (project home)
       let g:ctrlp_working_path_mode = 2
@@ -285,41 +439,43 @@
         \ 'file': '\.so$',
         \ }
 
-    Bundle "vim-scripts/ZoomWin"
+    NeoBundle "vim-scripts/ZoomWin"
       " <C-W>o
     
-    Bundle "Lokaltog/vim-easymotion.git"
+    NeoBundle "Lokaltog/vim-easymotion.git"
   " "}}}
   
   " Editing "{{{
-    Bundle "tpope/vim-repeat"
-    Bundle "tpope/vim-abolish"
-    Bundle "tpope/vim-unimpaired"
+    NeoBundle "tpope/vim-repeat"
+    NeoBundle "tpope/vim-abolish"
+    NeoBundle "tpope/vim-unimpaired"
       " [, ] with many many actions
-    Bundle "edsono/vim-matchit"
+    NeoBundle "edsono/vim-matchit"
       " better % (g%, a%, [%, ]%)
-    Bundle "tpope/vim-surround"
+    NeoBundle "kurkale6ka/vim-pairs"
+      " better text objects for punct, and "q" for quotes
+    NeoBundle "tpope/vim-surround"
       " ys"'... TODO: look up
-    Bundle "tpope/vim-speeddating"
+    NeoBundle "tpope/vim-speeddating"
       " enhances <C-A>, <C-X>
 
-    Bundle "kana/vim-textobj-user"
+    NeoBundle "kana/vim-textobj-user"
       " library for vim-textobj-rubyblock
-    Bundle "nelstrom/vim-textobj-rubyblock"
+    NeoBundle "nelstrom/vim-textobj-rubyblock"
       " r = ruby block (ar, ir)
-    Bundle "amadanmath/Parameter-Text-Objects"
+    NeoBundle "amadanmath/Parameter-Text-Objects"
       " P = parameter (aP, iP)
 
-    Bundle "tomtom/tcomment_vim"
-      " <C-_> is the commenting prefix
+    " XXX NeoBundle "tpope/vim-commentary"
+      " gc<motion> comments and toggles, gcu uncomments
 
-    Bundle "scrooloose/syntastic"
+    NeoBundle "scrooloose/syntastic"
       " checks syntax on save
-    Bundle "henrik/vim-indexed-search"
+    NeoBundle "henrik/vim-indexed-search"
       " shows search index/position (also, g/)
-    Bundle "vim-scripts/file-line"
+    NeoBundle "vim-scripts/file-line"
       " opening file:line:column works
-    Bundle "mbbill/undotree"
+    NeoBundle "mbbill/undotree"
       nnoremap <F6> :UndotreeToggle<CR>
       if has("persistent_undo")
         set undodir="~/.vim/undo"
@@ -328,14 +484,15 @@
   " "}}}
   
   " Completion "{{{
-    " Bundle "Valloric/YouCompleteMe"
+    " XXX NeoBundle "Shougo/unite.vim"
+    " NeoBundle "Valloric/YouCompleteMe"
       " automatic completions
       " let g:ycm_key_invoke_completion = '<C-N>'
-    " Bundle "gmarik/snipmate.vim"
+    " NeoBundle "gmarik/snipmate.vim"
   " "}}}
   
   " Git "{{{
-    Bundle "tpope/vim-fugitive"
+    NeoBundle "tpope/vim-fugitive"
       " :Git ...
       autocmd BufReadPost fugitive://* set bufhidden=delete
       function! Gdifff()
@@ -348,36 +505,36 @@
         execute "Gdiff :3"
       endfunction
       command! Gdifff call Gdifff()
-    Bundle "int3/vim-extradite"
+    NeoBundle "int3/vim-extradite"
       " :Extradite
-    Bundle "mattn/gist-vim.git"
+    NeoBundle "mattn/gist-vim.git"
       " :Gist -p
   " "}}}
 
   " Ruby "{{{
-    " Bundle "astashov/vim-ruby-debugger"
+    " NeoBundle "astashov/vim-ruby-debugger"
       " :RDebugger
-    Bundle "tpope/vim-endwise"
+    NeoBundle "tpope/vim-endwise"
       " automatic "end" addition
-    Bundle "tpope/vim-rails"
+    NeoBundle "tpope/vim-rails"
       " :Rscript...
   " "}}}
   
   " Go-Lang "{{{
-    Bundle "jnwhiteh/vim-golang"
+    NeoBundle "jnwhiteh/vim-golang"
   " "}}}
 
   " JavaScript "{{{
-    Bundle "vim-scripts/jQuery"
+    NeoBundle "vim-scripts/jQuery"
 
-    Bundle "lukaszb/vim-web-indent"
+    NeoBundle "lukaszb/vim-web-indent"
       let g:js_indent_log = 0
 
-    Bundle "kchmck/vim-coffee-script.git"
+    NeoBundle "kchmck/vim-coffee-script.git"
   " "}}}
 
   " LaTeX "{{{
-    Bundle "vim-scripts/LaTeX-Box"
+    NeoBundle "vim-scripts/LaTeX-Box"
       autocmd FileType tex inoremap <buffer> [[ \begin{
       autocmd FileType tex imap <buffer> ]] <Plug>LatexCloseCurEnv
       autocmd FileType tex vmap <buffer> <Leader>lw <Plug>LatexWrapSelection
@@ -387,41 +544,45 @@
   " "}}}
   
   " HTML "{{{
-    Bundle "tpope/vim-markdown"
-    Bundle "tpope/vim-haml"
-    Bundle "tpope/vim-ragtag"
-    Bundle "rstacruz/sparkup", {'rtp': 'vim/'}
-    Bundle 'gregsexton/MatchTag'
+    NeoBundle "tpope/vim-markdown"
+    NeoBundle "tpope/vim-haml"
+    NeoBundle "tpope/vim-ragtag"
+    NeoBundle "rstacruz/sparkup", {'rtp': 'vim/'}
+    NeoBundle 'gregsexton/MatchTag'
   " "}}}
 
   " Database "{{{
-    Bundle "vim-scripts/dbext.vim"
+    NeoBundle "vim-scripts/dbext.vim"
       " :h dbext-tutorial
   " "}}}
 
   " LilyPond "{{{
-    Bundle "qrps/lilypond-vim"
+    NeoBundle "qrps/lilypond-vim"
   " "}}}
 
   " Tools "{{{
-    Bundle "vim-scripts/Conque-Shell"
+    NeoBundle "vim-scripts/Conque-Shell"
       " :ConqueTerm
-    Bundle "vim-scripts/renamer.vim"
+    NeoBundle "vim-scripts/renamer.vim"
       " :Renamer
-    Bundle "mileszs/ack.vim"
+    NeoBundle "mileszs/ack.vim"
       " :Ack [opts] pattern [dir]
-    Bundle "Shebang"
+    NeoBundle "Shebang"
       nnoremap <leader>X :w<CR>:call SetExecutable()<CR>
-    Bundle "chrisbra/Recover.vim"
+    NeoBundle "chrisbra/Recover.vim"
   " "}}}
   
   " Various "{{{
-    Bundle "amadanmath/amadan.vim"
+    NeoBundle "amadanmath/amadan.vim"
   " "}}}
 
   " OS X "{{{
-    Bundle "sjl/vitality.vim"
+    NeoBundle "sjl/vitality.vim"
       " make vim behave with iTerm2 and tmux
+  " }}}
+
+  " Installation check "{{{
+    NeoBundleCheck
   " }}}
 " "}}}
 
