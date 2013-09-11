@@ -3,12 +3,18 @@
   set history=256
   set autowrite
   set autoread
-  set clipboard+=unnamed
   set pastetoggle=<F5>
   set tags=./tags;$HOME
   set encoding=utf-8
   set virtualedit=block
   set matchpairs+=<:>
+
+  if has('unnamedplus')
+    set clipboard+=unnamedplus
+  else
+    set clipboard+=unnamed
+  endif
+
   " Modeline
   set modeline
   set modelines=5
