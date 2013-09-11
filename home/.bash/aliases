@@ -15,3 +15,9 @@ alias ltmux="if tmux has; then tmux attach -d; else tmux new; fi"
 wx() {
   python -m wx.py.Py$1
 }
+
+# Emulate copy but gain a progress bar (when timings matter).
+cpr () {
+  rsync --executability --group --human-readable --owner --perms \
+  --progress "$@"
+}
