@@ -615,9 +615,9 @@
         let g:neocomplcache_enable_at_startup = 1
     endif
 
-    NeoBundleLazy 'teramako/jscomplete-vim', { 'autoload' : {
-        \   'filetypes' : 'javascript'
-        \ }}
+    " NeoBundleLazy 'teramako/jscomplete-vim', { 'autoload' : {
+    "     \   'filetypes' : 'javascript'
+    "     \ }}
   " "}}}
   
   " Git "{{{

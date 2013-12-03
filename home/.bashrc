@@ -38,4 +38,4 @@ if [ -s "$HOME/.rvm/scripts/rvm" ]; then
 fi
 
 export PAGER="less"
-export LESS="-RSF"
+export LESS="-RS"

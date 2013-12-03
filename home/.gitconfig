@@ -49,4 +49,4 @@
   ignored = ls-files –others -i –exclude-standard
   patch = add --patch
 [push]
-	default = simple
+        #default = simple
