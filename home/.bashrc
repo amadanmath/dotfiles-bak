@@ -14,8 +14,11 @@ pathadd "$HOME/local/bin"
 pathadd "$GOPATH/bin"
 
 if [ -s ~/.lastcwd ]; then
-  export OLDPWD=`cat ~/.lastcwd`
-  rm ~/.lastcwd
+  TMPOLDPWD=`cat ~/.lastcwd`
+  if [ -n "$TMPOLDPWD" ]; then
+    rm -f ~/.lastcwd
+    export OLDPWD="$TMPOLDPWD"
+  fi
 fi
 
 if [ -s ~/.bash/aliases ]; then

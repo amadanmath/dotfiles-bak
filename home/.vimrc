@@ -8,6 +8,7 @@
   set encoding=utf-8
   set virtualedit=block
   set matchpairs+=<:>
+  set cryptmethod=blowfish
 
   if has('unnamedplus')
     set clipboard+=unnamedplus
@@ -43,7 +44,7 @@
 
   set backspace=indent,eol,start
 
-  set tabstop=2
+  set tabstop=8
   set softtabstop=2
   set shiftwidth=2
   set expandtab
@@ -79,6 +80,7 @@
     set guioptions-=T
   endif
 
+  " Neat fold text "{{{
   function! NeatFoldText()
     let line = ' ' . substitute(getline(v:foldstart), '^\s*"\?\s*\|\s*"\?\s*{{' . '{\d*\s*', '', 'g') . ' '
     let lines_count = v:foldend - v:foldstart + 1
@@ -90,6 +92,7 @@
     return foldtextstart . repeat(foldchar, winwidth(0)-length) . foldtextend
   endfunction
   set foldtext=NeatFoldText()
+  " "}}}
 " "}}}
 
 " Grep "{{{
@@ -110,7 +113,7 @@
   autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
 
   " tidy up XML XXX put it into ftplugins
-  autocmd FileType xml,xhtml nnoremap <buffer> <leader>x :%!tidy -q -i -utf8 -xml<CR>
+  autocmd FileType xml,xhtml nnoremap <buffer> <Leader>rx :%!tidy -q -i -utf8 -xml<CR>
 
   " keep a cursor line in the current window only
   set cursorline
@@ -129,10 +132,17 @@
   " visual mode on pasted text
   nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
 
-  " paste without yanking in visual mode
+  " jump to a line and the line of before and after of the same indent. "{{{
+  nnoremap <silent> g{ :<C-u>call search('^' .
+        \ matchstr(getline(line('.') + 1), '\(\s*\)') .'\S', 'b')<CR>^
+  nnoremap <silent> g} :<C-u>call search('^' .
+        \ matchstr(getline(line('.')), '\(\s*\)') .'\S')<CR>^
+  " "}}}
+
+  " paste without yanking in visual mode with P
   xnoremap <expr> P '"_d"'.v:register.'P'
 
-  " show/hide foldcolumn with foldenable
+  " show/hide foldcolumn with foldenable "{{{
   function! FoldColumnToggle()
     if &foldcolumn == 0
       setlocal foldcolumn=5
@@ -146,8 +156,59 @@
   set foldmethod=marker
   set foldopen=block,hor,insert,jump,mark,percent,quickfix,search,tag,undo
   set nofoldenable
+  " "}}}
 
-  " Search for selected text, forwards or backwards.
+  " Toggle hex edit mode "{{{
+  let g:hex_mode_on = 0
+  let g:hex_mode_saved_foldenable = &foldenable
+  function! ToggleHex()
+      if g:hex_mode_on
+          execute "%!xxd -r"
+          let g:hex_mode_on = 0
+          let &foldenable = g:hex_mode_saved_foldenable
+      else
+          execute "%!xxd"
+          let g:hex_mode_on = 1
+          let g:hex_mode_saved_foldenable = &foldenable
+          set nofoldenable
+      endif
+  endfunction
+  nmap <Leader>rh :call ToggleHex()<CR>
+  " "}}}
+
+  " Exchange gj and gk to j and k. "{{{
+  command! -nargs=0 -bar ToggleGJK call s:ToggleGJK()
+  nnoremap <silent> <Leader>rj :<C-u>ToggleGJK<CR>
+  xnoremap <silent> <Leader>rj :<C-u>ToggleGJK<CR>
+  function! s:ToggleGJK()
+    if exists('b:enable_mapping_gjk') && b:enable_mapping_gjk
+      let b:enable_mapping_gjk = 0
+      noremap <buffer> j j
+      noremap <buffer> k k
+      noremap <buffer> gj gj
+      noremap <buffer> gk gk
+
+      xnoremap <buffer> j j
+      xnoremap <buffer> k k
+      xnoremap <buffer> gj gj
+      xnoremap <buffer> gk gk
+    else
+      let b:enable_mapping_gjk = 1
+      noremap <buffer> j gj
+      noremap <buffer> k gk
+      noremap <buffer> gj j
+      noremap <buffer> gk k
+
+      xnoremap <buffer> j gj
+      xnoremap <buffer> k gk
+      xnoremap <buffer> gj j
+      xnoremap <buffer> gk k
+    endif
+  endfunction
+  " "}}}
+" }}}
+
+  " Search for selected text, forwards or backwards. "{{{
   vnoremap <silent> * :<C-U>
       \let old_reg=getreg('"')<Bar>let old_regtype=getregtype('"')<CR>
       \gvy/<C-R><C-R>=substitute(
@@ -171,7 +232,10 @@
   endfunction
 
   " paste, increment, yank again (debug statements)
-  nnoremap <leader>y p<C-A>==yy
+  nnoremap <Leader>y p<C-A>==yy
+
+  " edit vimrc
+  nnoremap <Leader>rv :e ~/.vimrc<CR>
 
   " parameter reordering
   function! ReorderParams(params)
@@ -183,7 +247,7 @@
     normal "zP
     let @z = oldz
   endfunction
-  nnoremap <leader>z "zdi(:call ReorderParams(@z)<CR>
+  nnoremap <Leader>z "zdi(:call ReorderParams(@z)<CR>
 
   " rename in file
   function! RenameInFile()
@@ -196,23 +260,27 @@
     let @/ = replacement
     set hls
   endfunction
-  nnoremap <leader>r :call RenameInFile()<CR>
+  nnoremap <Leader>rn :call RenameInFile()<CR>
+
+  " buffer delete without closing a window "{{{
+  function! s:CustomBufferDelete(bang)
+    if len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
+      silent! execute 'bdelete' . a:bang
+      return
+    endif
+    let current = bufnr('%')
+    BufExplorer
+    execute 'normal jo'
+    silent! execute 'bdelete' . a:bang . ' ' . current
+  endfunction
+  command! -nargs=0 -bang BD call <SID>CustomBufferDelete("<bang>")
+  " "}}}
 
   " find merge conflicts
-  nnoremap <silent> <leader>cf <ESC>/\v^[<=>]{7}( .*\|$)<CR>
+  nnoremap <silent> <Leader>rc <ESC>/\v^[<=>]{7}( .*\|$)<CR>
 
   " compensate for way too tiny escape key on mac air
   inoremap kj <Esc>
-
-  " make arrows move through windows
-  nnoremap <Left> <C-W>h
-  nnoremap <Down> <C-W>j
-  nnoremap <Up> <C-W>k
-  nnoremap <Right> <C-W>l
-  inoremap <Left> <Nop>
-  inoremap <Down> <Nop>
-  inoremap <Up> <Nop>
-  inoremap <Right> <Nop>
 " "}}}
 
 " MacVim specific stuff "{{{
@@ -240,9 +308,23 @@
     NeoBundleFetch "Shougo/neobundle.vim"
   " "}}}
 
-  " Asynchronous processing "{{{
-    " XXX NeoBundle "Shougo/vimproc"
-    " XXX NeoBundle "tpope/vim-dispatch"
+  " Unite "{{{
+    NeoBundle "Shougo/vimproc", {
+      \ 'build' : {
+      \     'windows' : 'make -f make_mingw32.mak',
+      \     'cygwin' : 'make -f make_cygwin.mak',
+      \     'mac' : 'make -f make_mac.mak',
+      \     'unix' : 'make -f make_unix.mak',
+      \    },
+      \ }
+    NeoBundle "Shougo/unite.vim"
+    NeoBundleLazy 'tsukkee/unite-tag', { 'autoload' : {
+        \   'unite_sources' : 'tag'
+        \ }}
+
+    " Mappings "{{{
+      nnoremap <Leader>uu :<C-u>Unite -start-insert file_rec/async<CR>
+    " }}}
   " "}}}
 
   " Appearance "{{{
@@ -252,8 +334,9 @@
         \    'Todo': { 'guifg': '900000', 'guibg': 'f0f000',
         \              'ctermfg': 'Red', 'ctermbg': 'Yellow',
         \              'attr': 'bold' },
-        \}
-    NeoBundle "itchyny/lightline.vim" "{{{
+        \ }
+    " LightLine "{{{
+    NeoBundle "itchyny/lightline.vim"
       " adds a helpful status line (depends on syntastic)
       if exists('g:powerline_font') && exists('+guifont')
         let &guifont=g:powerline_font
@@ -422,27 +505,27 @@
       " gem install CoffeeTags
       if executable('coffeetags')
         let g:tagbar_type_coffee = {
-              \ 'ctagsbin' : 'coffeetags',
-              \ 'ctagsargs' : '',
-              \ 'kinds' : [
-              \ 'f:functions',
-              \ 'o:object',
-              \ ],
-              \ 'sro' : ".",
-              \ 'kind2scope' : {
-              \ 'f' : 'object',
-              \ 'o' : 'object',
-              \ }
+              \   'ctagsbin' : 'coffeetags',
+              \   'ctagsargs' : '',
+              \   'kinds' : [
+              \     'f:functions',
+              \     'o:object',
+              \   ],
+              \   'sro' : ".",
+              \   'kind2scope' : {
+              \     'f' : 'object',
+              \     'o' : 'object',
+              \   }
               \ }
       endif
 
     NeoBundle "kien/ctrlp.vim"
-      let g:ctrlp_map = '<leader>^'
+      let g:ctrlp_map = '<Leader>^'
       " (project home)
       let g:ctrlp_working_path_mode = 2
       let g:ctrlp_custom_ignore = {
-        \ 'dir':  '\.git$\|\.hg$\|\.svn\|data$',
-        \ 'file': '\.so$',
+        \   'dir':  '\.git$\|\.hg$\|\.svn\|data$',
+        \   'file': '\.so$',
         \ }
 
     NeoBundle "vim-scripts/ZoomWin"
@@ -450,29 +533,35 @@
     
     NeoBundle "Lokaltog/vim-easymotion.git"
   " "}}}
-  
+
   " Editing "{{{
-    NeoBundle "tpope/vim-repeat"
+    NeoBundleLazy "tpope/vim-repeat", { 'autoload': {
+        \   'mappings' : '.',
+        \ }}
     NeoBundle "tpope/vim-abolish"
     NeoBundle "tpope/vim-unimpaired"
       " [, ] with many many actions
-    NeoBundle "edsono/vim-matchit"
+    NeoBundleLazy "edsono/vim-matchit", { 'autoload': {
+        \   'mappings' : ['%', 'g%']
+        \ }}
       " better % (g%, a%, [%, ]%)
     NeoBundle "kurkale6ka/vim-pairs"
       " better text objects for punct, and "q" for quotes
     NeoBundle "tpope/vim-surround"
-      " ys"'... TODO: look up
+      " ys... 
     NeoBundle "tpope/vim-speeddating"
       " enhances <C-A>, <C-X>
 
     NeoBundle "kana/vim-textobj-user"
       " library for vim-textobj-rubyblock
-    NeoBundle "nelstrom/vim-textobj-rubyblock"
+    NeoBundle "nelstrom/vim-textobj-rubyblock", {
+        \ 'depends': 'kana/vim-textobj-user',
+        \ }
       " r = ruby block (ar, ir)
     NeoBundle "amadanmath/Parameter-Text-Objects"
       " P = parameter (aP, iP)
 
-    " XXX NeoBundle "tpope/vim-commentary"
+    NeoBundle "tpope/vim-commentary"
       " gc<motion> comments and toggles, gcu uncomments
 
     NeoBundle "scrooloose/syntastic"
@@ -487,14 +576,48 @@
         set undodir="~/.vim/undo"
         set undofile
       endif
+
+    NeoBundleLazy 'kana/vim-smartword', { 'autoload' : {
+        \ 'mappings' : [
+        \   '<Plug>(smartword-']
+        \ }}
+      nmap w  <Plug>(smartword-w)
+      nmap b  <Plug>(smartword-b)
+      nmap ge  <Plug>(smartword-ge)
+      xmap w  <Plug>(smartword-w)
+      xmap b  <Plug>(smartword-b)
+      " omap w  <Plug>(smartword-w)
+      " omap b  <Plug>(smartword-b)
+      " omap ge  <Plug>(smartword-ge)
+    NeoBundleLazy 'bkad/CamelCaseMotion', { 'autoload' : {
+        \   'mappings': '<Plug>CamelCaseMotion_',
+        \ }}
+      map <silent> <Leader>w <Plug>CamelCaseMotion_w
+      map <silent> <Leader>b <Plug>CamelCaseMotion_b
+      map <silent> <Leader>e <Plug>CamelCaseMotion_e
+      map <silent> <Leader>W <Plug>CamelCaseMotion_w
+      map <silent> <Leader>B <Plug>CamelCaseMotion_b
+      map <silent> <Leader>E <Plug>CamelCaseMotion_e
+      omap <silent> i<Leader>w <Plug>CamelCaseMotion_iw
+      xmap <silent> i<Leader>w <Plug>CamelCaseMotion_iw
+      omap <silent> i<Leader>b <Plug>CamelCaseMotion_ib
+      xmap <silent> i<Leader>b <Plug>CamelCaseMotion_ib
+      omap <silent> i<Leader>e <Plug>CamelCaseMotion_ie
+      xmap <silent> i<Leader>e <Plug>CamelCaseMotion_ie
   " "}}}
   
   " Completion "{{{
-    " XXX NeoBundle "Shougo/unite.vim"
-    " NeoBundle "Valloric/YouCompleteMe"
-      " automatic completions
-      " let g:ycm_key_invoke_completion = '<C-N>'
-    " NeoBundle "gmarik/snipmate.vim"
+    if has('lua')
+      NeoBundle "Shougo/neocomplete.vim"
+        let g:neocomplete_enable_at_startup = 1
+    else
+      NeoBundle "Shougo/neocomplcache.vim"
+        let g:neocomplcache_enable_at_startup = 1
+    endif
+
+    NeoBundleLazy 'teramako/jscomplete-vim', { 'autoload' : {
+        \   'filetypes' : 'javascript'
+        \ }}
   " "}}}
   
   " Git "{{{
@@ -531,6 +654,9 @@
   " "}}}
 
   " JavaScript "{{{
+    NeoBundleLazy 'jelera/vim-javascript-syntax', { 'autoload': {
+        \   'filetypes': ['javascript']
+        \ }}
     NeoBundle "vim-scripts/jQuery"
 
     NeoBundle "lukaszb/vim-web-indent"
@@ -555,6 +681,7 @@
     NeoBundle "tpope/vim-ragtag"
     NeoBundle "rstacruz/sparkup", {'rtp': 'vim/'}
     NeoBundle 'gregsexton/MatchTag'
+    NeoBundle 'hail2u/vim-css3-syntax'
   " "}}}
 
   " Database "{{{
@@ -571,11 +698,34 @@
       " :ConqueTerm
     NeoBundle "vim-scripts/renamer.vim"
       " :Renamer
-    NeoBundle "mileszs/ack.vim"
-      " :Ack [opts] pattern [dir]
+    if executable('ack')
+      NeoBundle "mileszs/ack.vim", { 'autoload' : { 'commands' : ['Ack'] } }
+        " :Ack [opts] pattern [dir]
+    endif
+    if executable('ag')
+      NeoBundleLazy "rking/ag.vim", { 'autoload' : { 'commands' : ['Ag'] } }
+      " :Ag [opts] pattern [dir]
+    endif
     NeoBundle "Shebang"
-      nnoremap <leader>X :w<CR>:call SetExecutable()<CR>
+      nnoremap <Leader>rx :w<CR>:call SetExecutable()<CR>
     NeoBundle "chrisbra/Recover.vim"
+    NeoBundleLazy "FredKSchott/CoVim", { 'autoload': { 'commands': ['CoVim'], } }
+      let CoVim_default_name = "Amadan"
+      let CoVim_default_port = "3636"  
+    NeoBundleLazy 'add20/vim-conque', { 'autoload' : {
+        \ 'commands' : 'ConqueTerm'
+        \ }}
+  " "}}}
+  
+  " Documentation "{{{
+    NeoBundle 'rizzatti/funcoo.vim'
+    NeoBundleLazy 'rizzatti/dash.vim', {
+        \ 'autoload': {
+        \   'commands': [ 'Dash', 'Dash!', 'DashKeywords', 'DashSettings' ],
+        \   'mappings': [ '<Plug>DashSearch', '<Plug>DashGlobalSearch' ],
+        \ }}
+      nmap <silent> <Leader>da <Plug>DashSearch
+      nmap <silent> <Leader>dd <Plug>DashGlobalSearch
   " "}}}
   
   " Various "{{{
@@ -596,3 +746,6 @@
   filetype plugin indent on
   syntax on
 " "}}}
+
+
+" TODO Configure NeoComplCache and Unite, maybe install Notational Velocity (nvim)"
