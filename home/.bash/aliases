@@ -4,6 +4,8 @@ alias reload="source ~/.bash_profile"
 alias be="bundle exec"
 alias bi='bundle install --path vendor && (grep -q "vendor/ruby" .gitignore 2>/dev/null || echo "vendor/ruby" >> .gitignore)'
 
+# padrino
+alias bep='bundle exec padrino'
 
 # Ruby webdev
 alias rst="touch tmp/restart.txt"

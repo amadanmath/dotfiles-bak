@@ -80,6 +80,7 @@
     set guioptions-=T
   endif
 
+
   " Neat fold text "{{{
   function! NeatFoldText()
     let line = ' ' . substitute(getline(v:foldstart), '^\s*"\?\s*\|\s*"\?\s*{{' . '{\d*\s*', '', 'g') . ' '
@@ -678,6 +679,7 @@
   " HTML "{{{
     NeoBundle "tpope/vim-markdown"
     NeoBundle "tpope/vim-haml"
+    NeoBundle "slim-template/vim-slim.git"
     NeoBundle "tpope/vim-ragtag"
     NeoBundle "rstacruz/sparkup", {'rtp': 'vim/'}
     NeoBundle 'gregsexton/MatchTag'

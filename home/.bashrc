@@ -39,3 +39,6 @@ fi
 
 export PAGER="less"
 export LESS="-RS"
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
