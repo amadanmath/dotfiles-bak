@@ -488,6 +488,7 @@
       let g:vimshell_force_overwrite_statusline = 0
     "}}}
     NeoBundle "amadanmath/numbers.vim"
+      nnoremap <leader>nn :NumbersToggle<CR>
       " gives relative numbers in normal mode
   " "}}}
 
