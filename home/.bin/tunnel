@@ -1,62 +1,136 @@
 #!/bin/bash
 
-# This is complicated by the fact that ssh doesn't leave a PID when
-# daemonised >.<
-
-HOST=$1
-
-# do we have a tunnel there already?
-if [ -n "$HOST" ]
-then
-  PORT=`ps -eo pid,command | awk '$2=="ssh" && $3=="-fNL" && match($4, /:'$HOST':/) {split($4,a,/:/); print a[1]}'`
-fi
-
-# if we have 3 arguments and no tunnel, make the tunnel
-if [ -n "$3" -a -z "$PORT" ]
-then
-  TUNNEL=$2
-  PORT=$3
-
-  # make the tunnel
-  ssh -fNL $PORT:$HOST:22 -oCheckHostIP=no -oStrictHostKeyChecking=no -oNumberOfPasswordPrompts=1 $TUNNEL
-  PID=`ps -eo pid,command | awk '!/awk/ && /ssh -fNL'" $PORT"':/{print $1}'`
-  sleep 1
-
-  # mount the tunnel volume
-  mkdir -p /Volumes/$HOST
-  sshfs localhost: -p $PORT -ovolname=$HOST -oCheckHostIP=no -oStrictHostKeyChecking=no -oNumberOfPasswordPrompts=1 -ofollow_symlinks /Volumes/$HOST
-
-  # enter the tunnel
-  #  ssh-keygen -R [localhost]:9022
-  ssh -oCheckHostIP=no -oStrictHostKeyChecking=no -oNumberOfPasswordPrompts=1 -p $PORT localhost
-
-  # when done, unmount the tunnel volume
-  umount /Volumes/$HOST
-  sleep 1
-
-  # and collapse the tunnel
-  kill $PID
-
-# otherwise go through the tunnel
+if [ "$(uname)" == "Darwin" ]; then
+  mount_root=/Volumes
 else
-  # if no arguments, detect a tunnel
-  if [ -z "$HOST" ]
-  then
-    HOST=`ps -eo pid,command | awk '$2=="ssh" && $3=="-fNL" {split($4,a,/:/); print a[2]}' | head -1`
-  fi
-
-  if [ -z "$PORT" ]
-  then
-    PORT=`ps -eo pid,command | awk '$2=="ssh" && $3=="-fNL" && match($4, /:'$HOST':/) {split($4,a,/:/); print a[1]}'`
-  fi
-
-  # tunnel found
-  if [ -n "$HOST" -a -n "$PORT" ]
-  then
-    ssh -oCheckHostIP=no -oStrictHostKeyChecking=no -oNumberOfPasswordPrompts=1 -p $PORT localhost
-
-  # tunnel not found
-  else
-    echo "Error: create a tunnel first: tunnel <host> <tunnel> <port>" 1>&2
-  fi
+  mount_root=$HOME/mnt
 fi
+
+function ensure_thost {
+  if [ -z "$thost" ]
+  then
+    echo "Error: no tunnel" >&2
+    exit
+  fi
+}
+
+function get_thost {
+  thost="$1"
+  if [ -n "$thost" ]
+  then
+    return 0
+  fi
+  if [ -n "$thost" ]
+  then
+    shift
+  else
+    thost=`(cd ~/.ssh && ls tunnel.* 2>/dev/null) | head -1 | cut -c8-`
+    guess=1
+  fi
+  ensure_thost
+  if [ -n "$guess" ]
+  then
+    echo "Tunnel not specified, assuming $thost."
+  fi
+}
+
+function get_tconn_port {
+  if [ -n "$port" ]
+  then
+    return 0
+  fi
+  port=`(cd ~/.ssh && ls tconn.$thost.$host.* 2>/dev/null) | head -1 | sed "s/tconn\\.$thost\\.$host\\.//"`
+}
+
+function allocate_port {
+  port=`netstat -atn | perl -ane 'if ( $F[3] =~ /(\d+)$/ ) { $x{$1}=1 } END{ print( (grep {!$x{$_}} 32768..61000)[0] . "\n" )}'`
+  echo "Using port $port"
+}
+
+function make_tunnel {
+  ssh -fNM -S ~/.ssh/tunnel.$thost -oCheckHostIP=no -oStrictHostKeyChecking=no -oNumberOfPasswordPrompts=1 $thost
+}
+
+if [ -z "$1" ]
+then
+  cd ~/.ssh
+  ls tunnel* 2>/dev/null
+  ls tconn.* 2>/dev/null
+  ls conn.* 2>/dev/null
+  exit
+fi
+
+while [ -n "$1" ]
+do
+  case $1 in
+    on )
+      thost=$2
+      shift
+      ensure_thost
+      make_tunnel
+      ;;
+    off )
+      get_thost $2
+      for socket in `(cd ~/.ssh && ls tconn.$thost.* 2>/dev/null)`
+      do
+        IFS="." read -a thost_host <<< "$socket"
+        host=${thost_host[2]}
+        if [ -d "$mount_root/$host" ]
+        then
+          umount "$mount_root/$host"
+        fi
+        ssh -O exit -S ~/.ssh/$socket $thost
+      done
+      ssh -O exit -S ~/.ssh/tunnel.$thost $thost
+      ;;
+    to )
+      if [[ "$2" == /* ]]
+      then
+        dir="$2"
+        shift
+      else
+        dir=
+      fi
+      host=$2
+      shift
+      get_thost $2
+      if [ -z `ls ~/.ssh/tunnel.$thost 2>/dev/null` ]
+      then
+        make_tunnel
+      fi
+      get_tconn_port
+      if [ -z "$port" ]
+      then
+        allocate_port
+        ssh -O forward -fNM -S ~/.ssh/tconn.$thost.$host.$port -L $port:$host:22 $thost
+        mkdir -p $mount_root/$host
+        sshfs localhost:$dir -p $port -ovolname=$host -ofollow_symlinks /Volumes/$host
+        ssh -fNM -S ~/.ssh/conn.$host.$port -p $port localhost
+      fi
+      ssh -S ~/.ssh/conn.$host.$port -p $port localhost
+      ;;
+    close )
+      host=$2
+      if [ -z $host ]
+      then
+        socket=`(cd ~/.ssh && ls tconn.* 2>/dev/null) | head -1`
+      else
+        socket=`(cd ~/.ssh && ls tconn.$host.* 2>/dev/null) | head -1`
+        shift
+      fi
+      if [ -z "$socket" ]
+      then
+        echo "No tunnel."
+        exit
+      fi
+      IFS="." read -a thost_host <<< "$socket"
+      thost=${thost_host[1]}
+      host=${thost_host[2]}
+      port=${thost_host[3]}
+      echo "Using host $host via $thost"
+      umount $mount_root/$host
+      ssh -O exit -S ~/.ssh/conn.$host.$port -p $port localhost
+      ssh -O exit -S ~/.ssh/tconn.$thost.$host.$port $thost
+  esac
+  shift
+done

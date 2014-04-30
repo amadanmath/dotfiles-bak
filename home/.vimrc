@@ -38,7 +38,7 @@
   set formatoptions-=t
 
   set nowrap
-  set textwidth=72
+  "set textwidth=72
   set wildmode=list:longest,list:full
   set wildmenu
 
@@ -47,6 +47,7 @@
   set tabstop=8
   set softtabstop=2
   set shiftwidth=2
+  set shiftround
   set expandtab
   set smarttab
 
@@ -142,6 +143,9 @@
 
   " paste without yanking in visual mode with P
   xnoremap <expr> P '"_d"'.v:register.'P'
+
+  " insert into camelcase
+  nnoremap <leader>s ~hi
 
   " show/hide foldcolumn with foldenable "{{{
   function! FoldColumnToggle()

@@ -8,10 +8,10 @@ pathadd() {
         PATH="${PATH:+"$PATH:"}$1"
     fi
 }
-pathadd "$HOME/.rvm/bin"
 pathadd "$HOME/.bin"
 pathadd "$HOME/local/bin"
 pathadd "$GOPATH/bin"
+pathadd "$HOME/.rvm/bin"
 
 if [ -s ~/.lastcwd ]; then
   TMPOLDPWD=`cat ~/.lastcwd`
@@ -42,3 +42,5 @@ export LESS="-RS"
 
 ### Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"
+
+PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting
