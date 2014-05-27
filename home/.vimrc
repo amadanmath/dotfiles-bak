@@ -145,7 +145,7 @@
   xnoremap <expr> P '"_d"'.v:register.'P'
 
   " insert into camelcase
-  nnoremap <leader>s ~hi
+  nnoremap <leader>S ~hi
 
   " show/hide foldcolumn with foldenable "{{{
   function! FoldColumnToggle()
@@ -242,18 +242,6 @@
   " edit vimrc
   nnoremap <Leader>rv :e ~/.vimrc<CR>
 
-  " parameter reordering
-  function! ReorderParams(params)
-    let oldz = @z
-    normal "zdi(
-    let params = split(a:params, ',\s')
-    let order = input(string(map(copy(params), 'v:key + 1 . ": " . v:val')))
-    let @z = join(map(split(order, '[0-9]\zs'), 'params[str2nr(v:val) - 1]'), ', ')
-    normal "zP
-    let @z = oldz
-  endfunction
-  nnoremap <Leader>z "zdi(:call ReorderParams(@z)<CR>
-
   " rename in file
   function! RenameInFile()
     normal "zyiw
@@ -306,8 +294,14 @@
 " Plugins "{{{
   " Vundle "{{{
     filetype off
+
     if has('vim_starting')
       set runtimepath+=~/.vim/bundle/neobundle.vim/
+      if !isdirectory(expand('~/.vim/bundle/neobundle.vim'))
+        echo "Installing NeoBundle\n"
+        silent execute '!mkdir -p ~/.vim/bundle'
+        silent execute '!git clone https://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim'
+      endif
     endif
     call neobundle#rc(expand('~/.vim/bundle/'))
     NeoBundleFetch "Shougo/neobundle.vim"
@@ -561,11 +555,14 @@
     NeoBundle "kana/vim-textobj-user"
       " library for vim-textobj-rubyblock
     NeoBundle "nelstrom/vim-textobj-rubyblock", {
-        \ 'depends': 'kana/vim-textobj-user',
+        \   'depends': 'kana/vim-textobj-user',
         \ }
       " r = ruby block (ar, ir)
     NeoBundle "amadanmath/Parameter-Text-Objects"
       " P = parameter (aP, iP)
+    NeoBundle "michaeljsmith/vim-indent-object"
+      " i = indent (with/out a single line header)
+      " I = indent (with/out enclosing indent block)
 
     NeoBundle "tpope/vim-commentary"
       " gc<motion> comments and toggles, gcu uncomments
@@ -583,18 +580,6 @@
         set undofile
       endif
 
-    NeoBundleLazy 'kana/vim-smartword', { 'autoload' : {
-        \ 'mappings' : [
-        \   '<Plug>(smartword-']
-        \ }}
-      nmap w  <Plug>(smartword-w)
-      nmap b  <Plug>(smartword-b)
-      nmap ge  <Plug>(smartword-ge)
-      xmap w  <Plug>(smartword-w)
-      xmap b  <Plug>(smartword-b)
-      " omap w  <Plug>(smartword-w)
-      " omap b  <Plug>(smartword-b)
-      " omap ge  <Plug>(smartword-ge)
     NeoBundleLazy 'bkad/CamelCaseMotion', { 'autoload' : {
         \   'mappings': '<Plug>CamelCaseMotion_',
         \ }}
@@ -610,6 +595,8 @@
       xmap <silent> i<Leader>b <Plug>CamelCaseMotion_ib
       omap <silent> i<Leader>e <Plug>CamelCaseMotion_ie
       xmap <silent> i<Leader>e <Plug>CamelCaseMotion_ie
+
+    NeoBundle 'PeterRincker/vim-argumentative'
   " "}}}
   
   " Completion "{{{
@@ -654,7 +641,7 @@
     NeoBundle "tpope/vim-rails"
       " :Rscript...
   " "}}}
-  
+
   " Go-Lang "{{{
     NeoBundle "jnwhiteh/vim-golang"
   " "}}}
