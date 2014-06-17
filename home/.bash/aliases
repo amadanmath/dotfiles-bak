@@ -23,3 +23,6 @@ cpr () {
   rsync --executability --group --human-readable --owner --perms \
   --progress "$@"
 }
+
+# my IP
+alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
