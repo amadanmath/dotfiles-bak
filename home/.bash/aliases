@@ -26,3 +26,7 @@ cpr () {
 
 # my IP
 alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
+
+alias youtube-dl-mp3="youtube-dl --extract-audio --audio-format mp3 -t"
+
+alias simple_http_server="ruby -run -e httpd . -p 5000"

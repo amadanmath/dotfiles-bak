@@ -2,13 +2,15 @@
   set nocompatible
   set history=256
   set autowrite
-  set autoread
   set pastetoggle=<F5>
   set tags=./tags;$HOME
   set encoding=utf-8
   set virtualedit=block
   set matchpairs+=<:>
   set cryptmethod=blowfish
+
+  set autoread
+  au CursorHold,CursorHoldI * checktime
 
   if has('unnamedplus')
     set clipboard+=unnamedplus
@@ -365,10 +367,15 @@
       let g:lightline = {
             \ 'colorscheme': 'wombat',
             \ 'active': {
-            \   'left': [ [ 'mode', 'paste' ], [ 'fugitive', 'filename' ], ['ctrlpmark'] ],
+            \   'left': [ [ 'mode', 'paste' ], [ 'gdifff', 'fugitive', 'filename' ], ['ctrlpmark'] ],
             \   'right': [[ 'lineinfo', 'syntastic' ], ['percent'], [ 'fileformat', 'fileencoding', 'filetype']]
             \ },
+            \ 'inactive': {
+            \   'left': [[ 'gdifff', 'fugitive', 'filename' ], ['ctrlpmark'] ],
+            \   'right': [[ 'lineinfo', 'syntastic' ], ['percent']]
+            \ },
             \ 'component_function': {
+            \   'gdifff': 'MyGdifff',
             \   'fugitive': 'MyFugitive',
             \   'filename': 'MyFilename',
             \   'fileformat': 'MyFileformat',
@@ -402,6 +409,10 @@
               \ ('' != MyReadonly() ? MyReadonly() . ' ' : '') .
               \ ('' != fname ? fname : '[No Name]') .
               \ ('' != MyModified() ? ' ' . MyModified() : '')
+      endfunction
+
+      function! MyGdifff()
+        return exists('b:gdifffmode') ? b:gdifffmode : ''
       endfunction
       
       function! MyFugitive()
@@ -494,10 +505,10 @@
       nnoremap <silent> <S-F2> :execute "NERDTree ".expand("%:p:h")<CR>
 
     NeoBundle "amadanmath/bufexplorer.zip"
-      nnoremap <unique> <F3> :BufExplorerToggle<CR>
+      nnoremap <F3> :BufExplorerToggle<CR>
 
     NeoBundle "majutsushi/tagbar"
-      nnoremap <script> <silent> <unique> <F4> :TagbarToggle<CR>
+      nnoremap <script> <silent> <F4> :TagbarToggle<CR>
       let g:tagbar_autoclose = 1
       let g:tagbar_autofocus = 1
       let g:tagbar_sort = 0
@@ -527,18 +538,25 @@
         \   'dir':  '\.git$\|\.hg$\|\.svn\|data$',
         \   'file': '\.so$',
         \ }
+      if executable('ag')
+        let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+      endif
+      
 
     NeoBundle "vim-scripts/ZoomWin"
       " <C-W>o
     
     NeoBundle "Lokaltog/vim-easymotion.git"
+
+    NeoBundle 'justinmk/vim-sneak'
+      " s__, S__
   " "}}}
 
   " Editing "{{{
-    NeoBundleLazy "tpope/vim-repeat", { 'autoload': {
-        \   'mappings' : '.',
-        \ }}
+    NeoBundle "tpope/vim-repeat"
+    NeoBundle "vim-scripts/visualrepeat"
     NeoBundle "tpope/vim-abolish"
+      " coerce with cr?
     NeoBundle "tpope/vim-unimpaired"
       " [, ] with many many actions
     NeoBundleLazy "edsono/vim-matchit", { 'autoload': {
@@ -575,6 +593,7 @@
       " opening file:line:column works
     NeoBundle "mbbill/undotree"
       nnoremap <F6> :UndotreeToggle<CR>
+      nnoremap <S-F6> :UndotreeShow<CR>:UndotreeFocus<CR>
       if has("persistent_undo")
         set undodir="~/.vim/undo"
         set undofile
@@ -597,6 +616,9 @@
       xmap <silent> i<Leader>e <Plug>CamelCaseMotion_ie
 
     NeoBundle 'PeterRincker/vim-argumentative'
+      " , operator for moving ([,), text object (i,) amd shifting (<,) params
+
+    NeoBundle 'junegunn/vim-easy-align'
   " "}}}
   
   " Completion "{{{
@@ -618,13 +640,21 @@
       " :Git ...
       autocmd BufReadPost fugitive://* set bufhidden=delete
       function! Gdifff()
-        nnoremap <buffer> dk :diffget //1<CR>
-        nnoremap <buffer> dh :diffget //2<CR>
-        nnoremap <buffer> dl :diffget //3<CR>
+        nnoremap <buffer> dk :diffget //1<CR>:diffupdate<CR>
+        nnoremap <buffer> dh :diffget //2<CR>:diffupdate<CR>
+        nnoremap <buffer> dl :diffget //3<CR>:diffupdate<CR>
         nnoremap <buffer> dj :diffupdate<CR>
-        execute "Gdiff :1"
-        execute "Gdiff :2"
-        execute "Gdiff :3"
+        Gdiff :1
+        Gdiff :2
+        Gdiff :3
+        1wincmd w
+        let b:gdifffmode='Parent'
+        4wincmd w
+        let b:gdifffmode='Other'
+        3wincmd w
+        let b:gdifffmode='Merge'
+        2wincmd w
+        let b:gdifffmode='Current'
       endfunction
       command! Gdifff call Gdifff()
     NeoBundle "int3/vim-extradite"

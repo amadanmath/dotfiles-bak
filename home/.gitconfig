@@ -17,10 +17,7 @@
   logOutputEncoding = UTF-8
 
 [color]
-  diff = auto
-  status = auto
-  branch = auto
-  interactive = auto
+  ui = true
 
 [mergetool "mfugitive"]
   cmd = mvim -f -c \"Gdifff\" \"$MERGED\"
@@ -50,7 +47,7 @@
   patch = add --patch
   serve = !git daemon --reuseaddr --verbose --base-path=. --export-all ./.git
 
-[push]
-        #default = simple
 [url "https://github.com/"]
 	insteadOf = git://github.com/
+[push]
+	default = upstream
