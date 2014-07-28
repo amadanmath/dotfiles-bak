@@ -2,7 +2,8 @@
   set nocompatible
   set history=256
   set autowrite
-  set pastetoggle=<F5>
+  set clipboard+=unnamed
+  set pastetoggle=<f5>
   set tags=./tags;$HOME
   set encoding=utf-8
   set virtualedit=block
@@ -599,6 +600,10 @@
         set undofile
       endif
 
+    NeoBundle "chreekat/vim-paren-crosshairs"
+      " show column of paren as well
+    NeoBundle "ConradIrwin/vim-bracketed-paste"
+      " turn on paste mode on insert-mode paste
     NeoBundleLazy 'bkad/CamelCaseMotion', { 'autoload' : {
         \   'mappings': '<Plug>CamelCaseMotion_',
         \ }}
