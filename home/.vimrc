@@ -671,6 +671,10 @@
     NeoBundle "tpope/vim-rails"
       " :Rscript...
   " "}}}
+  
+  " Swift "{{{
+    NeoBundle "toyamarinyon/vim-swift"
+  " "}}}
 
   " Go-Lang "{{{
     NeoBundle "jnwhiteh/vim-golang"

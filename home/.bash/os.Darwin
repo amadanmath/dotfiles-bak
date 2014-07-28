@@ -14,3 +14,8 @@ if [ -f `brew --prefix`/etc/bash_completion ]; then
 fi
 
 pathadd "/usr/texbin"
+
+alias xcrun6="/Applications/Xcode6-Beta3.app/Contents/Developer/usr/bin/xcrun"
+alias swift="/Applications/Xcode6-Beta3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift -sdk /Applications/Xcode6-Beta3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk"
+alias xc5="sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
+alias xc6="sudo xcode-select -s /Applications/Xcode6-Beta3.app/Contents/Developer"
