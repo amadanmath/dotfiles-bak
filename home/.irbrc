@@ -3,6 +3,9 @@
 require 'rubygems'
 require 'yaml'
 
+require 'bond'
+Bond.start
+
 alias q exit
 
 class Object

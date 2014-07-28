@@ -4,6 +4,8 @@ alias reload="source ~/.bash_profile"
 alias be="bundle exec"
 alias bi='bundle install --path vendor && (grep -q "vendor/ruby" .gitignore 2>/dev/null || echo "vendor/ruby" >> .gitignore)'
 
+# padrino
+alias bep='bundle exec padrino'
 
 # Ruby webdev
 alias rst="touch tmp/restart.txt"
@@ -15,3 +17,16 @@ alias ltmux="if tmux has; then tmux attach -d; else tmux new; fi"
 wx() {
   python -m wx.py.Py$1
 }
+
+# Emulate copy but gain a progress bar (when timings matter).
+cpr () {
+  rsync --executability --group --human-readable --owner --perms \
+  --progress "$@"
+}
+
+# my IP
+alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
+
+alias youtube-dl-mp3="youtube-dl --extract-audio --audio-format mp3 -t"
+
+alias simple_http_server="ruby -run -e httpd . -p 5000"

@@ -8,7 +8,7 @@
 
 [core]
   pager = less -FRSX
-  editor = /usr/local/bin/vim
+  editor = /usr/bin/vim
   excludesfile = ~/.gitignore_global
   whitespace = fix,-indent-with-non-tab,trailing-space,cr-at-eol
 
@@ -17,10 +17,7 @@
   logOutputEncoding = UTF-8
 
 [color]
-  diff = auto
-  status = auto
-  branch = auto
-  interactive = auto
+  ui = true
 
 [mergetool "mfugitive"]
   cmd = mvim -f -c \"Gdifff\" \"$MERGED\"
@@ -48,8 +45,9 @@
   ready = rebase -i @{u}
   ignored = ls-files –others -i –exclude-standard
   patch = add --patch
+  serve = !git daemon --reuseaddr --verbose --base-path=. --export-all ./.git
 
 [url "https://github.com/"]
 	insteadOf = git://github.com/
 [push]
-	default = simple
+	default = upstream

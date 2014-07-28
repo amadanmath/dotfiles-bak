@@ -8,14 +8,17 @@ pathadd() {
         PATH="${PATH:+"$PATH:"}$1"
     fi
 }
-pathadd "$HOME/.rvm/bin"
 pathadd "$HOME/.bin"
 pathadd "$HOME/local/bin"
 pathadd "$GOPATH/bin"
+pathadd "$HOME/.rvm/bin"
 
 if [ -s ~/.lastcwd ]; then
-  export OLDPWD=`cat ~/.lastcwd`
-  rm ~/.lastcwd
+  TMPOLDPWD=`cat ~/.lastcwd`
+  if [ -n "$TMPOLDPWD" ]; then
+    rm -f ~/.lastcwd
+    export OLDPWD="$TMPOLDPWD"
+  fi
 fi
 
 if [ -s ~/.bash/aliases ]; then
@@ -33,3 +36,11 @@ fi
 if [ -s "$HOME/.rvm/scripts/rvm" ]; then
   source "$HOME/.rvm/scripts/rvm"
 fi
+
+export PAGER="less"
+export LESS="-RS"
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
+
+PATH=$PATH:$HOME/.rvm/bin # Add RVM to PATH for scripting

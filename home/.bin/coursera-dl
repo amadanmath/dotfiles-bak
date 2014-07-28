@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -24,7 +24,7 @@ backward compatible.
 """
 
 import argparse
-import cookielib
+import http.cookiejar
 import datetime
 import errno
 import getpass
@@ -34,13 +34,13 @@ import os
 import platform
 import re
 import string
-import StringIO
+import io
 import subprocess
 import sys
 import tempfile
 import time
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 
 try:
     from BeautifulSoup import BeautifulSoup
@@ -118,15 +118,15 @@ def write_cookie_file(className, username, password):
         global csrftoken
         global session
         hn, fn = tempfile.mkstemp()
-        cookies = cookielib.LWPCookieJar()
+        cookies = http.cookiejar.LWPCookieJar()
         handlers = [
-            urllib2.HTTPHandler(),
-            urllib2.HTTPSHandler(),
-            urllib2.HTTPCookieProcessor(cookies)
+            urllib.request.HTTPHandler(),
+            urllib.request.HTTPSHandler(),
+            urllib.request.HTTPCookieProcessor(cookies)
         ]
-        opener = urllib2.build_opener(*handlers)
+        opener = urllib.request.build_opener(*handlers)
 
-        req = urllib2.Request(get_syllabus_url(className))
+        req = urllib.request.Request(get_syllabus_url(className))
         res = opener.open(req)
 
         for cookie in cookies:
@@ -136,10 +136,10 @@ def write_cookie_file(className, username, password):
         opener.close()
 
         # Now make a call to the authenticator url:
-        cj = cookielib.MozillaCookieJar(fn)
-        opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj),
-                                      urllib2.HTTPHandler(),
-                                      urllib2.HTTPSHandler())
+        cj = http.cookiejar.MozillaCookieJar(fn)
+        opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj),
+                                      urllib.request.HTTPHandler(),
+                                      urllib.request.HTTPSHandler())
 
         # Preparation of headers and of data that we will send in a POST
         # request.
@@ -154,12 +154,13 @@ def write_cookie_file(className, username, password):
             'password': password
             }
 
-        formatted_data = urllib.urlencode(auth_data)
+        formatted_data = urllib.parse.urlencode(auth_data)
+        formatted_data = formatted_data.encode('utf-8')
 
-        req = urllib2.Request(NEW_AUTH_URL, formatted_data, std_headers)
+        req = urllib.request.Request(NEW_AUTH_URL, formatted_data, std_headers)
 
         opener.open(req)
-    except urllib2.HTTPError as e:
+    except urllib.error.HTTPError as e:
         if e.code == 404:
             raise ClassNotFoundException(className)
         else:
@@ -175,16 +176,16 @@ def down_the_wabbit_hole(className, cookies_file):
     """
     Get the session cookie
     """
-    auth_redirector_url = 'https://class.coursera.org/%s/auth/auth_redirector?type=login&subtype=normal&email=&visiting=%s' % (className, urllib.quote_plus(get_syllabus_url(className)))
+    auth_redirector_url = 'https://class.coursera.org/%s/auth/auth_redirector?type=login&subtype=normal&email=&visiting=%s' % (className, urllib.parse.quote_plus(get_syllabus_url(className)))
 
     global session
     cj = get_cookie_jar(cookies_file)
 
-    opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj),
-                                  urllib2.HTTPHandler(),
-                                  urllib2.HTTPSHandler())
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj),
+                                  urllib.request.HTTPHandler(),
+                                  urllib.request.HTTPSHandler())
 
-    req = urllib2.Request(auth_redirector_url)
+    req = urllib.request.Request(auth_redirector_url)
     opener.open(req)
 
     for cookie in cj:
@@ -220,7 +221,7 @@ def load_cookies_file(cookies_file):
     loader is very particular about this string.
     """
 
-    cookies = StringIO.StringIO()
+    cookies = io.StringIO()
     cookies.write('# Netscape HTTP Cookie File')
     cookies.write(open(cookies_file, 'r').read())
     cookies.flush()
@@ -229,7 +230,7 @@ def load_cookies_file(cookies_file):
 
 
 def get_cookie_jar(cookies_file):
-    cj = cookielib.MozillaCookieJar()
+    cj = http.cookiejar.MozillaCookieJar()
     cookies = load_cookies_file(cookies_file)
 
     # nasty hack: cj.load() requires a filename not a file, but if I use
@@ -247,9 +248,9 @@ def get_opener(cookies_file):
 
     cj = get_cookie_jar(cookies_file)
 
-    return urllib2.build_opener(urllib2.HTTPCookieProcessor(cj),
-                                urllib2.HTTPHandler(),
-                                urllib2.HTTPSHandler())
+    return urllib.request.build_opener(urllib.request.HTTPCookieProcessor(cj),
+                                urllib.request.HTTPHandler(),
+                                urllib.request.HTTPSHandler())
 
 
 def get_page(url, cookies_file):
@@ -257,8 +258,8 @@ def get_page(url, cookies_file):
     Download an HTML page using the cookiejar.
     """
 
-    opener = urllib2.build_opener(urllib2.HTTPHandler(), urllib2.HTTPSHandler())
-    req = urllib2.Request(url)
+    opener = urllib.request.build_opener(urllib.request.HTTPHandler(), urllib.request.HTTPSHandler())
+    req = urllib.request.Request(url)
 
     opener.addheaders.append(('Cookie', 'csrf_token=%s;session=%s' % (csrftoken, session)))
     ret = opener.open(req).read()
@@ -428,7 +429,7 @@ def download_lectures(wget_bin,
                 mkdir_p(sec)
 
             # write lecture resources
-            for fmt, url in [i for i in lecture.items() if i[0]
+            for fmt, url in [i for i in list(lecture.items()) if i[0]
                              in file_formats or 'all'
                              in file_formats]:
                 lecfn = os.path.join(sec, format_resource(lecnum + 1,
@@ -542,7 +543,7 @@ def download_file_axel(axel_bin, url, fn, cookies_file):
     get the job done fast.
     """
 
-    cj = cookielib.MozillaCookieJar(cookies_file)
+    cj = http.cookiejar.MozillaCookieJar(cookies_file)
     cj.load()
     cookies_header = "Cookie: " + "; ".join(i.name + '=' + i.value
                                             for i in list(cj))
@@ -567,7 +568,7 @@ def download_file_nowget(url, fn, cookies_file):
         opener.addheaders.append(('Cookie', 'csrf_token=%s;session=%s' %
                                   (csrftoken, session)))
         urlfile = opener.open(url)
-    except urllib2.HTTPError:
+    except urllib.error.HTTPError:
         logging.warn('Probably the file is missing from the AWS repository...'
                      ' skipping it.')
         return 1
@@ -579,12 +580,12 @@ def download_file_nowget(url, fn, cookies_file):
             while True:
                 data = urlfile.read(chunk_sz)
                 if not data:
-                    print '.'
+                    print('.')
                     break
                 bw.received(len(data))
                 f.write(data)
                 bytesread += len(data)
-                print '\r%d bytes read%s' % (bytesread, bw),
+                print('\r%d bytes read%s' % (bytesread, bw), end=' ')
                 sys.stdout.flush()
         urlfile.close()
         return 0
