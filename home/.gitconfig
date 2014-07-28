@@ -48,3 +48,8 @@
   ready = rebase -i @{u}
   ignored = ls-files –others -i –exclude-standard
   patch = add --patch
+
+[url "https://github.com/"]
+	insteadOf = git://github.com/
+[push]
+	default = simple

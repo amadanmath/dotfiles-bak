@@ -325,6 +325,11 @@
         set undodir="~/.vim/undo"
         set undofile
       endif
+
+    Bundle "chreekat/vim-paren-crosshairs"
+      " show column of paren as well
+    Bundle "ConradIrwin/vim-bracketed-paste"
+      " turn on paste mode on insert-mode paste
   " "}}}
   
   " Completion "{{{
@@ -392,6 +397,7 @@
     Bundle "tpope/vim-ragtag"
     Bundle "rstacruz/sparkup", {'rtp': 'vim/'}
     Bundle 'gregsexton/MatchTag'
+    Bundle 'slim-template/vim-slim.git'
   " "}}}
 
   " Database "{{{
