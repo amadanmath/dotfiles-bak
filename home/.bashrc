@@ -11,7 +11,6 @@ pathadd() {
 pathadd "$HOME/.bin"
 pathadd "$HOME/local/bin"
 pathadd "$GOPATH/bin"
-pathadd "$HOME/.rvm/bin"
 
 if [ -s ~/.lastcwd ]; then
   TMPOLDPWD=`cat ~/.lastcwd`
@@ -33,8 +32,8 @@ if [ -s ~/.bash/os.`uname` ]; then
   source ~/.bash/os.`uname`
 fi
 
-if [ -s "$HOME/.rvm/scripts/rvm" ]; then
-  source "$HOME/.rvm/scripts/rvm"
+if [ -s ~/.bashrc_local ]; then
+    source ~/.bashrc_local
 fi
 
 export PAGER="less"

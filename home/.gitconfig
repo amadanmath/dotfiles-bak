@@ -1,6 +1,9 @@
+[include]
+  path = ~/.gitconfig_local
+
 [user]
-	name = Goran Topic
-	email = amadan@mad.scientist.com
+  name = Goran Topic
+  email = amadan@mad.scientist.com
 
 [github]
   user = amadanmath
@@ -47,7 +50,5 @@
   patch = add --patch
   serve = !git daemon --reuseaddr --verbose --base-path=. --export-all ./.git
 
-[url "https://github.com/"]
-	insteadOf = git://github.com/
 [push]
-	default = upstream
+  default = upstream

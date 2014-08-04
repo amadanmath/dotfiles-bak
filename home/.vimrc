@@ -770,10 +770,18 @@
       " make vim behave with iTerm2 and tmux
   " }}}
 
-  " Installation check "{{{
-    NeoBundleCheck
-  " }}}
 " "}}}
+
+
+" Local vimrc if exists
+let $LOCALFILE=expand("~/.vimrc_local")
+if filereadable($LOCALFILE)
+    source $LOCALFILE
+endif
+
+" Plugin Installation check "{{{
+  NeoBundleCheck
+" }}}
 
 " Filetype "{{{
   filetype plugin indent on
