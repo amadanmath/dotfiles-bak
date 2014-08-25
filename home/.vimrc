@@ -288,11 +288,20 @@
   endif
 " "}}}
 
+" VimDiff "{{{
+if &diff
+  " Ignore whitespace
+  set diffopt+=iwhite
+endif
+" "}}}
+
+
 " Local vimrc "{{{
   if filereadable(expand('~/.vimrc.local'))
     source ~/.vimrc.local
   endif
 " "}}}
+
 
 " Plugins "{{{
   " Vundle "{{{
@@ -773,11 +782,12 @@
 " "}}}
 
 
-" Local vimrc if exists
+" Local vimrc if exists " {{{
 let $LOCALFILE=expand("~/.vimrc_local")
 if filereadable($LOCALFILE)
     source $LOCALFILE
 endif
+" " }}}
 
 " Plugin Installation check "{{{
   NeoBundleCheck

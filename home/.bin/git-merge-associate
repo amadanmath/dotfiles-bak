@@ -1,0 +1,116 @@
+#!/bin/bash
+#
+# Purpose: manually associate missed renames in merge conflicts
+#
+# Usage: git merge-associate <our-target> <base> <theirs>
+#
+# Example: After a failed rename detection A/a -> B/b which results
+# in CONFLICT (delete/modify) for A/a and corresponding "deleted by us"
+# messages in git status, the following invocation can be used to manually
+# establish the link:
+#
+#     git merge-associate B/b :1:A/a :3:A/a
+#
+# or using a shell with brace expansion:
+#
+#     git merge-associate B/b :{1,3}:A/a
+#
+# This registers 
+# - :1:A/a as   :1:B/b
+# - HEAD:B/b as :2:B/b
+# - :3:A/a as   :3:B/b
+# and replaces B/b with a merge-conflict version using  "git checkout -m -- B/b".
+# 
+# After manual resolution of B/b and "git add B/b", A/a can be resolved by 
+# "git rm A/a"
+#
+
+set -e
+#set -x
+
+get_tree()
+{
+    SPEC="${!1}"
+    TREE=""
+    
+    if [[ -z "$SPEC" ]]; then
+        TREE="EMPTY"
+    elif [[ "$SPEC" =~ ^:(.): ]]; then
+        TREE="INDEX:${BASH_REMATCH[1]}"
+    elif [[ "$SPEC" =~ ^: ]]; then
+        TREE="INDEX:0"
+    elif [[ "$SPEC" =~ ^([^:]+): ]]; then
+        TREE=${BASH_REMATCH[1]}
+    else # no colon, considered as HEAD
+        eval ${1}="HEAD:${!1}"
+        TREE="HEAD"
+    fi
+    eval ${1}_TREE="$TREE"
+    eval ${1}_BASENAME="${SPEC##*:}"
+}
+
+get_mode_and_sha()
+{
+    eval SPEC="\${$1}"
+    eval TREE="\${$1_TREE}"
+    eval BASENAME="\${$1_BASENAME}"
+    RESULT_MODE=""
+    RESULT_SHA=""
+    case "$TREE" in
+        EMPTY)
+            RESULT_MODE="100644"
+            RESULT_SHA="e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+        ;;
+        INDEX:*)
+            [[ "$TREE" =~ :(.) ]]
+            REQ_STAGE=${BASH_REMATCH[1]}
+            while read MODE SHA STAGE FILEPATH; do
+                if ! [ "$STAGE" = "$REQ_STAGE" ]; then
+                    continue
+                fi
+                RESULT_MODE="$MODE"
+                RESULT_SHA="$SHA"
+                break
+            done < <(git ls-files --stage "$BASENAME")
+        ;;
+        *)
+            while read MODE TYPE SHA FILEPATH; do
+                RESULT_MODE="$MODE"
+                RESULT_SHA="$SHA"
+            done < <(git ls-tree "$TREE" "$BASENAME")
+        ;;
+    esac
+    if [ -z "$RESULT_MODE" ] ; then
+        echo "Could not determine mode for $SPEC"
+        exit 1
+    fi
+    if [ -z "$RESULT_SHA" ] ; then
+        echo "Could not determine SHA1 for $SPEC"
+        exit 1
+    fi
+    eval $1_SHA="$RESULT_SHA"
+    eval $1_MODE="$RESULT_MODE"
+}
+
+if [ "$#" -ne 3 ]; then
+    echo "Usage: git merge-associate <our-target> <base> <theirs>"
+    exit 1
+fi
+
+TARGET="$1"
+BASE="$2"
+THEIRS="$3"
+
+for VAR in TARGET BASE THEIRS; do
+    get_tree $VAR
+    get_mode_and_sha $VAR
+done
+
+git update-index --index-info <<EOI
+000000 0000000000000000000000000000000000000000 0	$TARGET_BASENAME
+$BASE_MODE $BASE_SHA 1	$TARGET_BASENAME
+$TARGET_MODE $TARGET_SHA 2	$TARGET_BASENAME
+$THEIRS_MODE $THEIRS_SHA 3	$TARGET_BASENAME
+EOI
+
+git checkout -m -- $TARGET_BASENAME

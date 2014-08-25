@@ -10,6 +10,7 @@
   email = amadan@mad.scientist.com
 
 [core]
+  autocrlf = input
   pager = less -FRSX
   editor = /usr/bin/vim
   excludesfile = ~/.gitignore_global
@@ -49,6 +50,7 @@
   ignored = ls-files –others -i –exclude-standard
   patch = add --patch
   serve = !git daemon --reuseaddr --verbose --base-path=. --export-all ./.git
+  first = log -1 --format="%H" --reverse
 
 [push]
   default = upstream
