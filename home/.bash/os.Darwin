@@ -8,14 +8,16 @@ alias rgrep="grep -r"
 
 alias chrome="open -a 'Google Chrome'"
 
-[[ -s "~/.rvm/scripts/rvm" ]] && source "~/.rvm/scripts/rvm"
+# [[ -s "~/.rvm/scripts/rvm" ]] && source "~/.rvm/scripts/rvm"
 if [ -f `brew --prefix`/etc/bash_completion ]; then
   . `brew --prefix`/etc/bash_completion
 fi
 
-pathadd "/usr/texbin"
-
 alias xcrun6="/Applications/Xcode6-Beta3.app/Contents/Developer/usr/bin/xcrun"
 alias swift="/Applications/Xcode6-Beta3.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swift -sdk /Applications/Xcode6-Beta3.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk"
-alias xc5="sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
-alias xc6="sudo xcode-select -s /Applications/Xcode6-Beta3.app/Contents/Developer"
+# alias xc5="sudo xcode-select -s /Applications/Xcode.app/Contents/Developer"
+# alias xc6="sudo xcode-select -s /Applications/Xcode6-Beta3.app/Contents/Developer"
+
+alias combinepdf="python2.6 '/System/Library/Automator/Combine PDF Pages.action/Contents/Resources/join.py'"
+
+alias watchtree="watch -n 0.5 pstree"

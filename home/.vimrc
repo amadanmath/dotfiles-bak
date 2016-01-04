@@ -11,7 +11,7 @@
   set cryptmethod=blowfish
 
   set autoread
-  au CursorHold,CursorHoldI * checktime
+  au CursorHold,CursorHoldI * if (&bt != 'nofile') | checktime | endif
 
   if has('unnamedplus')
     set clipboard+=unnamedplus
@@ -118,7 +118,10 @@
   autocmd BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
 
   " tidy up XML XXX put it into ftplugins
-  autocmd FileType xml,xhtml nnoremap <buffer> <Leader>rx :%!tidy -q -i -utf8 -xml<CR>
+  autocmd FileType xml nnoremap <buffer> <Leader>xt :%!tidy -q -i -utf8 -xml<CR>
+  autocmd FileType xhtml nnoremap <buffer> <Leader>xt :%!tidy -q -i -utf8 -asxhtml<CR>
+  autocmd FileType html nnoremap <buffer> <Leader>xt :%!tidy -q -i -utf8 -ashtml<CR>
+  autocmd FileType xml,xhtml nnoremap <buffer> <Leader>xl :%!xmllint --format --recover -<CR>
 
   " keep a cursor line in the current window only
   set cursorline
@@ -136,6 +139,11 @@
 
   " visual mode on pasted text
   nnoremap <expr> gp '`[' . strpart(getregtype(), 0, 1) . '`]'
+
+  " close quickfix window
+  nnoremap <leader><leader>c :cclose<CR>
+  " close location window
+  nnoremap <leader><leader>l :close<CR>
 
   " jump to a line and the line of before and after of the same indent. "{{{
   nnoremap <silent> g{ :<C-u>call search('^' .
@@ -315,8 +323,12 @@ endif
         silent execute '!git clone https://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim'
       endif
     endif
-    call neobundle#rc(expand('~/.vim/bundle/'))
+    call neobundle#begin(expand('~/.vim/bundle/'))
     NeoBundleFetch "Shougo/neobundle.vim"
+  " "}}}
+
+  " EditorConfig "{{{
+    NeoBundle "editorconfig/editorconfig-vim"
   " "}}}
 
   " Unite "{{{
@@ -340,7 +352,6 @@ endif
 
   " Appearance "{{{
     NeoBundle "nanotech/jellybeans.vim"
-      colorscheme jellybeans
       let g:jellybeans_overrides = {
         \    'Todo': { 'guifg': '900000', 'guibg': 'f0f000',
         \              'ctermfg': 'Red', 'ctermbg': 'Yellow',
@@ -514,8 +525,12 @@ endif
       nnoremap <silent> <F2> :NERDTreeToggle<CR>
       nnoremap <silent> <S-F2> :execute "NERDTree ".expand("%:p:h")<CR>
 
-    NeoBundle "amadanmath/bufexplorer.zip"
-      nnoremap <F3> :BufExplorerToggle<CR>
+    NeoBundle "jlanzarotta/bufexplorer"
+      let g:bufExplorerDisableDefaultKeyMapping = 1
+      let g:bufExplorerShowDirectories = 0
+      nnoremap <F3> :ToggleBufExplorer<CR>
+      nnoremap <leader><F3><F3> :BufExplorerHorizontalSplit<CR>
+      nnoremap <leader><F3><F2> :BufExplorerVerticalSplit<CR>
 
     NeoBundle "majutsushi/tagbar"
       nnoremap <script> <silent> <F4> :TagbarToggle<CR>
@@ -540,7 +555,7 @@ endif
               \ }
       endif
 
-    NeoBundle "kien/ctrlp.vim"
+    NeoBundle "ctrlpvim/ctrlp.vim"
       let g:ctrlp_map = '<Leader>^'
       " (project home)
       let g:ctrlp_working_path_mode = 2
@@ -591,11 +606,15 @@ endif
     NeoBundle "michaeljsmith/vim-indent-object"
       " i = indent (with/out a single line header)
       " I = indent (with/out enclosing indent block)
-
+      
     NeoBundle "tpope/vim-commentary"
       " gc<motion> comments and toggles, gcu uncomments
 
     NeoBundle "scrooloose/syntastic"
+      if executable('tidy5')
+        let g:syntastic_html_tidy_exec = 'tidy5'
+        let g:syntastic_html_tidy_args = '--drop-empty-elements 0'
+      endif
       " checks syntax on save
     NeoBundle "henrik/vim-indexed-search"
       " shows search index/position (also, g/)
@@ -611,8 +630,6 @@ endif
 
     NeoBundle "chreekat/vim-paren-crosshairs"
       " show column of paren as well
-    NeoBundle "ConradIrwin/vim-bracketed-paste"
-      " turn on paste mode on insert-mode paste
     NeoBundleLazy 'bkad/CamelCaseMotion', { 'autoload' : {
         \   'mappings': '<Plug>CamelCaseMotion_',
         \ }}
@@ -677,12 +694,35 @@ endif
       " :Gist -p
   " "}}}
 
+  " Organisation "{{{
+    NeoBundle "itchyny/calendar.vim"
+      nnoremap <Leader>cc :Calendar<CR>
+
+    NeoBundle "vim-scripts/vimwiki"
+      let g:vimwiki_list = [
+          \   {
+          \     'path': '~/Dropbox/Private/vimwiki/main',
+          \     'auto_export': 1,
+          \     'template_path': '~/Dropbox/Private/vimwiki/templates',
+          \     'template_default': 'default',
+          \     'template_ext': '.html'
+          \   }
+          \ ]
+      let g:vimwiki_folding = 'list'
+      let g:vimwiki_use_calendar = 1
+      nmap <Leader>tt <Plug>VimwikiToggleListItem
+  " "}}}
+
   " Ruby "{{{
-    " NeoBundle "astashov/vim-ruby-debugger"
-      " :RDebugger
     NeoBundle "tpope/vim-endwise"
       " automatic "end" addition
-    NeoBundle "tpope/vim-rails"
+    NeoBundle 'vim-ruby/vim-ruby'
+      let g:rubycomplete_buffer_loading = 1 
+      let g:rubycomplete_classes_in_global = 1
+      let g:rubycomplete_rails = 1
+    " NeoBundle "astashov/vim-ruby-debugger"
+      " :RDebugger
+    " NeoBundle "tpope/vim-rails"
       " :Rscript...
   " "}}}
   
@@ -704,6 +744,32 @@ endif
       let g:js_indent_log = 0
 
     NeoBundle "kchmck/vim-coffee-script.git"
+
+    NeoBundle 'mtscout6/vim-cjsx'
+
+    NeoBundleLazy "gkz/vim-ls", { 'autoload': {
+        \   'filetypes': ['ls']
+        \ }}
+
+    NeoBundleLazy "heartsentwined/vim-ember-script", { 'autoload': {
+        \   'filetypes': ['em']
+        \ }}
+
+    NeoBundleLazy "heartsentwined/vim-emblem", { 'autoload': {
+        \   'filetypes': ['emblem']
+        \ }}
+  " "}}}
+
+  " HTML "{{{
+    NeoBundle "tpope/vim-markdown"
+    NeoBundle "tpope/vim-haml"
+    NeoBundle "slim-template/vim-slim.git"
+    NeoBundle "tpope/vim-ragtag"
+    NeoBundle "rstacruz/sparkup", {'rtp': 'vim/'}
+    NeoBundle 'gregsexton/MatchTag'
+    NeoBundle 'hail2u/vim-css3-syntax'
+
+    NeoBundle "mustache/vim-mustache-handlebars"
   " "}}}
 
   " LaTeX "{{{
@@ -716,16 +782,6 @@ endif
       let g:tex_flavor='latex'
   " "}}}
   
-  " HTML "{{{
-    NeoBundle "tpope/vim-markdown"
-    NeoBundle "tpope/vim-haml"
-    NeoBundle "slim-template/vim-slim.git"
-    NeoBundle "tpope/vim-ragtag"
-    NeoBundle "rstacruz/sparkup", {'rtp': 'vim/'}
-    NeoBundle 'gregsexton/MatchTag'
-    NeoBundle 'hail2u/vim-css3-syntax'
-  " "}}}
-
   " Database "{{{
     NeoBundle "vim-scripts/dbext.vim"
       " :h dbext-tutorial
@@ -751,7 +807,7 @@ endif
     NeoBundle "Shebang"
       nnoremap <Leader>rx :w<CR>:call SetExecutable()<CR>
     NeoBundle "chrisbra/Recover.vim"
-    NeoBundleLazy "FredKSchott/CoVim", { 'autoload': { 'commands': ['CoVim'], } }
+    NeoBundle "FredKSchott/CoVim", { 'autoload': { 'commands': ['CoVim'], } }
       let CoVim_default_name = "Amadan"
       let CoVim_default_port = "3636"  
     NeoBundleLazy 'add20/vim-conque', { 'autoload' : {
@@ -772,11 +828,19 @@ endif
   
   " Various "{{{
     NeoBundle "amadanmath/amadan.vim"
+
+    NeoBundle "vim-scripts/AnsiEsc.vim"
   " "}}}
 
   " OS X "{{{
-    NeoBundle "sjl/vitality.vim"
-      " make vim behave with iTerm2 and tmux
+    if has("gui_macvim")
+      NeoBundle "sjl/vitality.vim"
+        " make vim behave with iTerm2 and tmux
+      NeoBundle 'darfink/vim-plist'
+        " edit plists
+      NeoBundle 'ConradIrwin/vim-bracketed-paste'
+        " turn on paste mode on insert-mode paste
+    endif
   " }}}
 
 " "}}}
@@ -789,14 +853,19 @@ if filereadable($LOCALFILE)
 endif
 " " }}}
 
-" Plugin Installation check "{{{
-  NeoBundleCheck
-" }}}
+
+call neobundle#end()
+
 
 " Filetype "{{{
   filetype plugin indent on
   syntax on
+  colorscheme jellybeans
 " "}}}
+
+" Plugin Installation check "{{{
+  NeoBundleCheck
+" }}}
 
 
 " TODO Configure NeoComplCache and Unite, maybe install Notational Velocity (nvim)"

@@ -27,7 +27,8 @@
   cmd = mvim -f -c \"Gdifff\" \"$MERGED\"
 
 [merge]
-  tool = mfugitive
+  tool = vimdiff
+  #mfugitive
   ff = false
 
 [alias]

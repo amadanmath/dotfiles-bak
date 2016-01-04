@@ -1,12 +1,12 @@
 #!/bin/bash
 
-USERHOST=${!#}
-HOST=${!#/*@/}
-if [ -z "$HOST" ]; then
+userhost=${!#}
+host=${!#/*@/}
+if [ -z "$host" ]; then
   echo Error: hostname not specified >&2
   exit 1
 fi
-mkdir -p /Volumes/$HOST
-sshfs $USERHOST:/ -ofollow_symlinks /Volumes/$HOST
+mkdir -p /Volumes/$host
+sshfs $userhost:/ -ofollow_symlinks /Volumes/$host
 ssh "$@"
-umount /Volumes/$HOST
+umount /Volumes/$host
