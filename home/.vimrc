@@ -85,6 +85,30 @@
   endif
 
 
+  let s:pattern = '^\(.*\):h\([1-9][0-9]*\)$'
+  let s:minfontsize = 6
+  let s:maxfontsize = 16
+  function! AdjustFontSize(amount)
+    let fontname = substitute(&guifont, s:pattern, '\1', '')
+    let cursize = substitute(&guifont, s:pattern, '\2', '')
+    if fontname == ''
+      let fontname = 'Monaco'
+    endif
+    if cursize == ''
+      let cursize = '10'
+    endif
+    let newsize = cursize + a:amount
+    if (newsize >= s:minfontsize) && (newsize <= s:maxfontsize)
+      let newfont = fontname . ':h' . newsize
+      let &guifont = newfont
+    endif
+  endfunction
+
+  command! -count=1 LargerFont call AdjustFontSize(<count>)
+  command! -count=1 SmallerFont call AdjustFontSize(-<count>)
+
+
+
   " Neat fold text "{{{
   function! NeatFoldText()
     let line = ' ' . substitute(getline(v:foldstart), '^\s*"\?\s*\|\s*"\?\s*{{' . '{\d*\s*', '', 'g') . ' '
@@ -149,6 +173,9 @@
 
   " insert into camelcase
   nnoremap <leader>S ~hi
+
+  " toggle wrap
+  nnoremap <leader>qw :set wrap!<CR>
 
   " show/hide foldcolumn with foldenable "{{{
   function! FoldColumnToggle()
@@ -308,14 +335,14 @@ endif
     filetype off
 
     if has('vim_starting')
-      set runtimepath+=~/.vim/bundle/neobundle.vim/
       if !isdirectory(expand('~/.vim/bundle/neobundle.vim'))
         echo "Installing NeoBundle\n"
         silent execute '!mkdir -p ~/.vim/bundle'
         silent execute '!git clone https://github.com/Shougo/neobundle.vim ~/.vim/bundle/neobundle.vim'
       endif
+      set runtimepath+=~/.vim/bundle/neobundle.vim/
     endif
-    call neobundle#rc(expand('~/.vim/bundle/'))
+    call neobundle#begin(expand('~/.vim/bundle/'))
     NeoBundleFetch "Shougo/neobundle.vim"
   " "}}}
 
@@ -339,13 +366,8 @@ endif
   " "}}}
 
   " Appearance "{{{
-    NeoBundle "nanotech/jellybeans.vim"
-      colorscheme jellybeans
-      let g:jellybeans_overrides = {
-        \    'Todo': { 'guifg': '900000', 'guibg': 'f0f000',
-        \              'ctermfg': 'Red', 'ctermbg': 'Yellow',
-        \              'attr': 'bold' },
-        \ }
+    NeoBundle "sickill/vim-monokai"
+
     " LightLine "{{{
     NeoBundle "itchyny/lightline.vim"
       " adds a helpful status line (depends on syntastic)
@@ -514,7 +536,7 @@ endif
       nnoremap <silent> <F2> :NERDTreeToggle<CR>
       nnoremap <silent> <S-F2> :execute "NERDTree ".expand("%:p:h")<CR>
 
-    NeoBundle "amadanmath/bufexplorer.zip"
+    NeoBundle "jlanzarotta/bufexplorer"
       nnoremap <F3> :BufExplorerToggle<CR>
 
     NeoBundle "majutsushi/tagbar"
@@ -754,7 +776,7 @@ endif
     NeoBundleLazy "FredKSchott/CoVim", { 'autoload': { 'commands': ['CoVim'], } }
       let CoVim_default_name = "Amadan"
       let CoVim_default_port = "3636"  
-    NeoBundleLazy 'add20/vim-conque', { 'autoload' : {
+    NeoBundleLazy 'vim-scripts/Conque-Shell', { 'autoload' : {
         \ 'commands' : 'ConqueTerm'
         \ }}
   " "}}}
@@ -789,14 +811,20 @@ if filereadable($LOCALFILE)
 endif
 " " }}}
 
-" Plugin Installation check "{{{
-  NeoBundleCheck
-" }}}
+" End of bundles " {{{
+ call neobundle#end()
+" " }}}
+
 
 " Filetype "{{{
   filetype plugin indent on
   syntax on
 " "}}}
 
+" Plugin Installation check "{{{
+  NeoBundleCheck
+" }}}
+
+  colorscheme monokai
 
 " TODO Configure NeoComplCache and Unite, maybe install Notational Velocity (nvim)"

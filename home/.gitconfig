@@ -54,3 +54,7 @@
 
 [push]
   default = upstream
+[url "ssh://git@github.com/"]
+	insteadOf = git://github.com/
+[diff]
+	tool = vimdiff
