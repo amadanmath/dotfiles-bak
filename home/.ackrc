@@ -1,5 +1,14 @@
+--smart-case
+--follow
+
 --ignore-dir=data
+--ignore-dir=log
 --ignore-dir=jsc
+--ignore-dir=tmp
+
 --type-add=html=.haml
+--type-set=yaml=.yml,.yaml
 --type-add=css=.sass,.scss
 --type-set=coffee=.coffee
+--type-set=slim=.slim
+--type-set=rackup=.ru

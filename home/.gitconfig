@@ -3,11 +3,11 @@
 
 [user]
   name = Goran Topic
-  email = amadan@mad.scientist.com
+  email = amadanmath+github@gmail.com
 
 [github]
   user = amadanmath
-  email = amadan@mad.scientist.com
+  email = amadanmath+github@gmail.com
 
 [core]
   autocrlf = input
@@ -42,6 +42,7 @@
   pop = stash pop
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
   lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
+  lg = log --graph --pretty=format:'%Cred%h%Creset%C(auto)%d%Creset %s %C(bold blue)%an%Creset %Cgreen%cr' --abbrev-commit
   ff = flow feature
   fr = flow release
   fh = flow hotfix
@@ -55,3 +56,10 @@
 
 [push]
   default = upstream
+[fetch]
+  prune = true
+[filter "lfs"]
+  required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
