@@ -1,4 +1,3 @@
-
 " vim: set foldmethod=marker foldlevel=0:
 
 set nocompatible
@@ -468,4 +467,3 @@ augroup END
     command! -nargs=0 -bang BD call <SID>CustomBufferDelete("<bang>")
   "}}}
 " }}}
->>>>>> d39d6a064870ab41b46278aad3c11a32ffc2c6e5
